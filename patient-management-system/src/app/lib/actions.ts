@@ -3,6 +3,7 @@
 import { prisma } from "./prisma";
 import { verifySession } from "./sessions";
 import bcrypt from "bcryptjs";
+import { revalidatePath } from "next/cache";
 
 export async function changePassword({ currentPassword, newPassword, confirmPassword }: { currentPassword: string, newPassword: string, confirmPassword: string }) {
 
@@ -104,7 +105,6 @@ export async function addQueue() {
     })
 
     revalidatePath('/queue');
-    revalidatePath('/queue/_components/Pagination')
     return { status: 'success', message: 'Queue added successfully' }
 }
 
