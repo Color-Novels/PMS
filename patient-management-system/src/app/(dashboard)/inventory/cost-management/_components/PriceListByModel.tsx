@@ -29,15 +29,15 @@ export default function PriceListByModel({ items }: { items: StockData[] }) {
 
             {/* Total Price */}
             <div className="flex items-center gap-3 text-gray-700 text-md justify-end flex-1">
+              <AiOutlineDollar className="w-5 h-5 text-gray-500" />
+              <span className="font-medium tracking-wide">
+                Rs. {item.totalPrice.toFixed(2)}
+              </span>
               <Button asChild variant="default" size="sm">
                 <Link href={`/inventory/cost-management/stocks/${item.id}`}>
                   View Info
                 </Link>
               </Button>
-              <AiOutlineDollar className="w-5 h-5 text-gray-500" />
-              <span className="font-medium tracking-wide">
-                Rs. {item.totalPrice.toFixed(2)}
-              </span>
             </div>
           </Card>
         ))

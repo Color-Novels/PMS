@@ -1189,7 +1189,7 @@ export async function getStockByModel({
             name: { contains: query },
             batch: {
                 some: {
-                    status: "AVAILABLE",
+                    // status: "AVAILABLE",
                     ...(startDate && endDate ? {
                         stockDate: {
                             gte: startDate,
@@ -1202,7 +1202,7 @@ export async function getStockByModel({
         include: {
             batch: {
                 where: {
-                    status: "AVAILABLE",
+                    // status: "AVAILABLE",
                     ...(startDate && endDate ? {
                         stockDate: {
                             gte: startDate,
@@ -1245,7 +1245,7 @@ export async function getStockByBatch({
                 { drug: { name: { contains: query } } },
                 { drugBrand: { name: { contains: query } } },
             ],
-            status: "AVAILABLE",
+            // status: "AVAILABLE",
             ...(startDate && endDate ? {
                 stockDate: {
                     gte: startDate,
@@ -1287,7 +1287,7 @@ export async function getStockByBrand({
             Batch: {
                 some: {
                     AND: [
-                        { status: "AVAILABLE" },
+                        // { status: "AVAILABLE" },
                         {
                             stockDate: {
                                 gte: formattedStartDate,
@@ -1302,7 +1302,7 @@ export async function getStockByBrand({
             Batch: {
                 where: {
                     AND: [
-                        { status: "AVAILABLE" },
+                        // { status: "AVAILABLE" },
                         {
                             stockDate: {
                                 gte: formattedStartDate,
