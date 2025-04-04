@@ -1,15 +1,24 @@
 import React from 'react';
 import {Card} from "@/components/ui/card";
 import {
-    AlertCircle,
-    FileText
+    AlertCircle, ClipboardList, CreditCard,
+    FileText, Percent, Tag
 } from "lucide-react";
-import {Batch, Drug, DrugBrand, Issue, OffRecordMeds, UnitConcentration} from "@prisma/client";
-import {CustomBadge} from "@/app/(dashboard)/_components/CustomBadge";
+import {
+    Batch,
+    ChargeType,
+    Drug,
+    DrugBrand,
+    Issue,
+    OffRecordMeds,
+    PrescriptionCharges,
+    UnitConcentration
+} from "@prisma/client";
+import {BasicColorType, CustomBadge} from "@/app/(dashboard)/_components/CustomBadge";
 import {
     getStrategyStyles, DrugIcon, StrategyDetails,
 } from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/PrescriptionIssuesList";
-import {calculateForDays, calculateTimes} from "@/app/lib/utils";
+import {calculateForDays, calculateTimes, compareChargeTypes} from "@/app/lib/utils";
 
 export interface IssueWithDetails extends Issue {
     drug: Drug;
@@ -27,7 +36,7 @@ const PrescriptionIssueCard = ({issue}: { issue: IssueWithDetails }) => {
 
     return (
         <Card
-            className={`p-4 flex-grow overflow-hidden border-l-4 ${cardStyles.borderColor}`}>
+            className={`p-4 flex-grow overflow-hidden border-l-4 cursor-default ${cardStyles.borderColor}`}>
             <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4">
                     <div className="mt-1">
@@ -98,7 +107,7 @@ const OffRecordMedCard = ({med}: { med: OffRecordMeds }) => {
     }
 
     return (
-        <Card className="p-4 flex-grow overflow-hidden border-l-4 border-l-slate-500">
+        <Card className="p-4 flex-grow overflow-hidden border-l-4 border-l-slate-500 cursor-default">
             <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4">
                     <div className="mt-1">
@@ -121,4 +130,123 @@ const OffRecordMedCard = ({med}: { med: OffRecordMeds }) => {
     );
 };
 
-export {PrescriptionIssueCard, OffRecordMedCard};
+export interface OtherChargesListProps {
+    charges: PrescriptionCharges[];
+}
+
+const getChargeIcon = (type: ChargeType) => {
+    switch (type) {
+        case 'PROCEDURE':
+            return <ClipboardList className="h-5 w-5 text-purple-500"/>;
+        case 'FIXED':
+            return <CreditCard className="h-5 w-5 text-blue-500"/>;
+        case 'PERCENTAGE':
+            return <Percent className="h-5 w-5 text-green-500"/>;
+        case 'DISCOUNT':
+            return <Tag className="h-5 w-5 text-amber-500"/>;
+        default:
+            return <CreditCard className="h-5 w-5 text-blue-500"/>;
+    }
+};
+
+const getCardBorderColor = (type: ChargeType) => {
+    switch (type) {
+        case 'PROCEDURE':
+            return 'border-l-purple-500';
+        case 'FIXED':
+            return 'border-l-blue-500';
+        case 'PERCENTAGE':
+            return 'border-l-green-500';
+        case 'DISCOUNT':
+            return 'border-l-amber-500';
+        default:
+            return 'border-l-blue-500';
+    }
+};
+
+const getBadgeColor = (type: ChargeType): keyof BasicColorType => {
+    switch (type) {
+        case 'PROCEDURE':
+            return 'purple';
+        case 'FIXED':
+            return 'blue';
+        case 'PERCENTAGE':
+            return 'green';
+        case 'DISCOUNT':
+            return 'amber';
+        default:
+            return 'blue';
+    }
+};
+
+const getValueSuffix = (type: ChargeType) => {
+    switch (type) {
+        case 'FIXED':
+            return 'LKR';
+        case 'PERCENTAGE':
+            return '%';
+        case 'DISCOUNT':
+            return '%';
+        default:
+            return '';
+    }
+};
+
+function ChargesList({charges}: OtherChargesListProps) {
+    // Sort using the custom order
+    charges.sort((a, b) => {
+        // Get the order values for each charge type
+        return compareChargeTypes(a.type, b.type);
+    });
+
+    return (
+        <div className="space-y-3">
+
+            {charges.map((charge, index) => {
+                    const borderColor = getCardBorderColor(charge.type);
+                    const badgeColor = getBadgeColor(charge.type);
+                    const valueSuffix = getValueSuffix(charge.type);
+
+                    return (
+                        <Card
+                            key={index}
+                            className={`p-4 cursor-default h-full overflow-hidden border-l-4 ${borderColor}`}
+                        >
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-start space-x-4">
+                                    <div className="mt-1">
+                                        {getChargeIcon(charge.type)}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center space-x-2">
+                                            <h3 className="font-medium">{charge.name}</h3>
+                                            <CustomBadge text={charge.name} color={badgeColor}/>
+                                        </div>
+
+                                        <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                            {charge.type === 'FIXED' ? (
+                                                <span
+                                                    className="font-semibold">{valueSuffix} {charge.value.toFixed(2)}</span>
+                                            ) : (
+                                                <span
+                                                    className="font-semibold">{charge.value.toFixed(2)}{valueSuffix}</span>
+                                            )}
+                                        </div>
+                                        {charge.description && (
+                                            <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                                <FileText size={18} className="flex-shrink-0"/>
+                                                <span>{charge.description}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    );
+                }
+            )}
+        </div>
+    );
+}
+
+export {PrescriptionIssueCard, OffRecordMedCard, ChargesList};

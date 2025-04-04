@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import {useActionState} from 'react';
 import {login} from "@/app/lib/auth";
 import {Mail, Lock} from 'lucide-react';
@@ -8,6 +8,10 @@ import {Input} from "@/components/ui/input";
 
 function LoginForm() {
     const [state, action, pending] = useActionState(login, '');
+    // Clear LocalStorage on mount
+    useEffect(() => {
+        localStorage.clear();
+    }, []);
 
     return (
         <form action={action} className="space-y-6">

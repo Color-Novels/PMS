@@ -5,6 +5,7 @@ import {BasicColorType, CustomBadge} from "@/app/(dashboard)/_components/CustomB
 import {ChevronLeft} from "lucide-react";
 import {formatDistanceToNow} from "date-fns";
 import {
+    ChargesList,
     OffRecordMedCard,
     PrescriptionIssueCard
 } from "@/app/(dashboard)/patients/[id]/prescriptions/[prescriptionID]/_components/MedicineCards";
@@ -43,6 +44,8 @@ const Page = async ({params}: { params: Promise<{ id: string; prescriptionID: st
         bill = await getBill(prescriptionID);
     }
 
+    const procedures = prescription.Charges.filter((chm) => chm.type === "PROCEDURE");
+
     return (
         <Card className="p-4">
             <CardHeader className={`flex-row justify-between pb-2`}>
@@ -65,13 +68,13 @@ const Page = async ({params}: { params: Promise<{ id: string; prescriptionID: st
             </CardHeader>
             <CardContent className="space-y-3">
                 {prescription.details && (
-                    <div className="flex items-center gap-2 text-gray-500 text-sm">
-                        <span className="font-semibold">{prescription.details}</span>
-                    </div>
+                    <>
+                        <div className="flex items-center gap-2 text-gray-500 text-sm">
+                            <span className="font-semibold">{prescription.details}</span>
+                        </div>
+                        <Separator/>
+                    </>
                 )}
-
-
-                <Separator/>
 
                 {/* Prescription Vitals */}
                 {prescription.PrescriptionVitals && prescription.PrescriptionVitals.length > 0 && (
@@ -89,11 +92,11 @@ const Page = async ({params}: { params: Promise<{ id: string; prescriptionID: st
                                 </div>
                             ))}
                         </div>
+                        <Separator/>
                     </>
                 )}
 
 
-                <Separator/>
                 {/*Prescription Issues*/}
                 <h2 className="text-xl font-semibold italic text-primary-700">Rx</h2>
                 {prescription.status === "COMPLETED" ? (
@@ -104,10 +107,11 @@ const Page = async ({params}: { params: Promise<{ id: string; prescriptionID: st
                                 {prescription.issues.map((issue) => (
                                     <PrescriptionIssueCard issue={issue} key={issue.id}/>
                                 ))}
+                                <Separator/>
                             </div>
+
                         )}
 
-                        <Separator/>
 
                         {prescription.OffRecordMeds.length > 0 && (
                             <div className="space-y-4">
@@ -115,8 +119,18 @@ const Page = async ({params}: { params: Promise<{ id: string; prescriptionID: st
                                 {prescription.OffRecordMeds.map((med) => (
                                     <OffRecordMedCard med={med} key={med.id}/>
                                 ))}
+                                <Separator/>
                             </div>
                         )}
+
+                        {procedures.length > 0 && (
+                            <div className="space-y-4">
+                                <span className="text font-semibold">Procedures</span>
+                                <ChargesList charges={procedures}/>
+                                <Separator/>
+                            </div>
+                        )}
+
                         <BillComponent bill={bill}/>
                         <div className="flex justify-end">
                             <BillExport
@@ -131,17 +145,22 @@ const Page = async ({params}: { params: Promise<{ id: string; prescriptionID: st
                     </>
                 ) : (
                     <>
+                        {procedures.length > 0 && (
+                            <div className="space-y-4">
+                                <span className="text font-semibold">Procedures</span>
+                                <ChargesList charges={procedures}/>
+                                <Separator/>
+                            </div>
+                        )}
                         {prescription.OffRecordMeds.length > 0 && (
                             <div className="space-y-4">
                                 <span className="text font-semibold">Off Record Medications</span>
                                 {prescription.OffRecordMeds.map((med) => (
                                     <OffRecordMedCard med={med} key={med.id}/>
                                 ))}
+                                <Separator/>
                             </div>
                         )}
-
-                        <Separator/>
-
                         <BatchAssign issues={prescription.issues} prescriptionID={prescription.id} patientID={id}
                                      role={session.role}/>
                     </>

@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//Models
+
 model Patient {
   id             Int                  @id @default(autoincrement())
   telephone      String
@@ -80,11 +82,23 @@ model DrugBrand {
 model Drug {
   id               Int               @id @default(autoincrement())
   name             String
-  Buffer           Int
   batch            Batch[]
   BatchHistory     BatchHistory[]
   Issue            Issue[]
   stratergyHistory StratergyHistory?
+  bufferLevels     BufferLevel[]
+}
+
+model BufferLevel {
+  id                  Int               @id @default(autoincrement())
+  drugId              Int
+  type                DrugType
+  unitConcentrationId Int
+  bufferAmount        Int
+  drug                Drug              @relation(fields: [drugId], references: [id])
+  unitConcentration   UnitConcentration @relation(fields: [unitConcentrationId], references: [id])
+
+  @@unique([drugId, type, unitConcentrationId])
 }
 
 model Supplier {
@@ -123,23 +137,32 @@ model UnitConcentration {
   Batch         Batch[]
   BatchHistory  BatchHistory[]
   Issue         Issue[]
+  BufferLevel   BufferLevel[]
 }
 
 model Prescription {
-  id                 Int                  @id @default(autoincrement())
-  time               DateTime             @default(now())
+  id                 Int                   @id @default(autoincrement())
+  time               DateTime              @default(now())
   presentingSymptoms String
-  status             PrescriptionStatus   @default(PENDING)
+  status             PrescriptionStatus    @default(PENDING)
   details            String?
   patientId          Int
   issues             Issue[]
   OffRecordMeds      OffRecordMeds[]
-  patient            Patient              @relation(fields: [patientId], references: [id])
+  patient            Patient               @relation(fields: [patientId], references: [id])
   PrescriptionVitals PrescriptionVitals[]
-  doctorCharge       Float
-  dispensaryCharge   Float
-  discount           Float
-  medicinesCharge    Float
+  Charges            PrescriptionCharges[]
+  finalPrice         Float?
+}
+
+model PrescriptionCharges {
+  id             Int          @id @default(autoincrement())
+  Prescription   Prescription @relation(fields: [prescriptionId], references: [id])
+  prescriptionId Int
+  name           String
+  type           ChargeType
+  value          Float
+  description    String?
 }
 
 model Vitals {
@@ -300,7 +323,9 @@ model BatchHistory {
 }
 
 model Charge {
-  name      ChargeType @id
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  type      ChargeType
   value     Float
   updatedAt DateTime   @updatedAt
 }
@@ -389,11 +414,11 @@ enum MedicalCertificateStatus {
 }
 
 enum PatientHistoryType {
+  ALLERGY
   MEDICAL
   SURGICAL
   FAMILY
   SOCIAL
-  ALLERGY
 }
 
 enum VitalType {
@@ -403,6 +428,9 @@ enum VitalType {
 }
 
 enum ChargeType {
-  DOCTOR
-  DISPENSARY
+  MEDICINE
+  FIXED
+  PERCENTAGE
+  PROCEDURE
+  DISCOUNT
 }

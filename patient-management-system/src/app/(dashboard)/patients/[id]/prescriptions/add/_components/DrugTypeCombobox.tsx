@@ -81,7 +81,6 @@ const DrugTypeComboBox = ({
                                     key={option.name}
                                     value={option.name}
                                     onSelect={() => handleSelect(option)}
-                                    className="rounded-md hover:bg-gray-100"
                                 >
                                     <span
                                         className="font-medium">{option.name}</span>

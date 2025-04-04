@@ -104,7 +104,7 @@ const ConcentrationComboBox = ({
                                     key={option.id}
                                     value={option.concentration}
                                     onSelect={() => handleSelect(option)}
-                                    className="flex flex-col rounded-md hover:bg-gray-100"
+                                    className="flex flex-col"
                                 >
                                     <div className="flex items-center min-w-24 w-full gap-2">
                                         <span className="font-medium">{option.concentration} mg/unit</span>

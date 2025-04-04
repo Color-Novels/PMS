@@ -10,13 +10,14 @@ export default function LogoutPage() {
     useEffect(() => {
         const handleLogout = async () => {
             try {
+                localStorage.clear();
                 await logout();
                 router.push('/login');
                 // Force a hard refresh to clear any cached states
                 router.refresh();
             } catch (error) {
                 console.error('Logout failed:', error);
-                // Still redirect to login in case of error
+                // Still redirect to log in in case of error
                 router.push('/login');
             }
         };

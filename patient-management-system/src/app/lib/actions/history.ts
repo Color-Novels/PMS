@@ -1,52 +1,51 @@
-'use server';
+"use server";
 
-import {Prisma} from "@prisma/client";
-import type {PatientHistoryType} from "@prisma/client";
-import {prisma} from "@/app/lib/prisma";
-import {verifySession} from "@/app/lib/sessions";
-import {redirect} from "next/navigation";
-import {myError} from "@/app/lib/definitions";
-import {revalidatePath} from "next/cache";
+import { Prisma } from "@prisma/client";
+import type { PatientHistoryType } from "@prisma/client";
+import { prisma } from "@/app/lib/prisma";
+import { verifySession } from "@/app/lib/sessions";
+import { redirect } from "next/navigation";
+import { myError } from "@/app/lib/definitions";
+import { revalidatePath } from "next/cache";
+import { compareHistoryTypes } from "../utils";
 
 export async function getHistory({
-                                     filter = "all",
-                                     query = "",
-                                     patientID,
-                                     limit
-                                 }: {
+    filter = "all",
+    query = "",
+    patientID,
+}: {
     filter?: string;
     query?: string;
     patientID: number;
-    limit?: number;
 }) {
     const session = await verifySession();
 
-    if (session.role !== 'DOCTOR') redirect('/unauthorized');
-    if (!patientID) throw new Error('No patient ID');
+    if (session.role !== "DOCTOR") redirect("/unauthorized");
+    if (!patientID) throw new Error("No patient ID");
 
     const baseSearchCriteria: Prisma.PatientHistoryWhereInput = {
         OR: [
-            {name: {contains: query, mode: "insensitive"}},
-            {description: {contains: query, mode: "insensitive"}}
-        ]
+            { name: { contains: query, mode: "insensitive" } },
+            { description: { contains: query, mode: "insensitive" } },
+        ],
     };
 
     let typeFilter: object;
 
     switch (filter) {
-        case 'medical':
-            typeFilter = {type: 'MEDICAL'};
+        case "medical":
+            typeFilter = { type: "MEDICAL" };
             break;
-        case 'social':
-            typeFilter = {type: 'SOCIAL'};
+        case "social":
+            typeFilter = { type: "SOCIAL" };
             break;
-        case 'family':
-            typeFilter = {type: 'FAMILY'};
+        case "family":
+            typeFilter = { type: "FAMILY" };
             break;
-        case 'allergy':
-            typeFilter = {type: 'ALLERGY'};
+        case "allergy":
+            typeFilter = { type: "ALLERGY" };
             break;
-        case 'all':
+        case "all":
         default:
             typeFilter = {};
             break;
@@ -56,29 +55,81 @@ export async function getHistory({
         where: {
             patientId: patientID,
             ...typeFilter,
-            ...baseSearchCriteria
+            ...baseSearchCriteria,
         },
         orderBy: {
-            time: 'desc'
-        }
+            time: "desc",
+        },
     };
-
-    // Only add limit if it's explicitly passed
-    if (limit !== undefined) {
-        findManyOptions.take = limit;
-    }
-
     return await prisma.patientHistory.findMany(findManyOptions);
 }
 
+export async function getHistorySidebar({
+    filter = "all",
+    patientID,
+    query = "",
+}: {
+    filter?: string;
+    query?: string;
+    patientID: number;
+}) {
+    const session = await verifySession();
+
+    if (session.role !== "DOCTOR") redirect("/unauthorized");
+    if (!patientID) throw new Error("No patient ID");
+
+    const baseSearchCriteria: Prisma.PatientHistoryWhereInput = {
+        OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { description: { contains: query, mode: "insensitive" } },
+        ],
+    };
+
+    let typeFilter: object;
+
+    switch (filter) {
+        case "medical":
+            typeFilter = { type: "MEDICAL" };
+            break;
+        case "social":
+            typeFilter = { type: "SOCIAL" };
+            break;
+        case "family":
+            typeFilter = { type: "FAMILY" };
+            break;
+        case "allergy":
+            typeFilter = { type: "ALLERGY" };
+            break;
+        case "all":
+        default:
+            typeFilter = {};
+            break;
+    }
+    const result = await prisma.patientHistory.findMany({
+        where: {
+            patientId: patientID,
+            ...typeFilter,
+            ...baseSearchCriteria,
+        },
+        orderBy: {
+            time: "desc",
+        },
+    });
+
+    result.sort((a, b) => {
+        return compareHistoryTypes(b.type, a.type);
+    })
+
+    return result;
+}
 
 export async function addHistory({
-                                     patientID,
-                                     name,
-                                     description,
-                                     type,
-                                     time
-                                 }: {
+    patientID,
+    name,
+    description,
+    type,
+    time,
+}: {
     patientID: number;
     name: string;
     description?: string;
@@ -86,8 +137,8 @@ export async function addHistory({
     time?: Date;
 }): Promise<myError> {
     const session = await verifySession();
-    if (session.role !== 'DOCTOR') {
-        return {success: false, message: 'Unauthorized'};
+    if (session.role !== "DOCTOR") {
+        return { success: false, message: "Unauthorized" };
     }
 
     try {
@@ -97,56 +148,53 @@ export async function addHistory({
                 name,
                 description,
                 type,
-                time: time || new Date() // Use provided time or default to current time
-            }
+                time: time || new Date(), // Use provided time or default to current time
+            },
         });
 
         revalidatePath(`/patients/${patientID}/history`);
         revalidatePath(`/patients/${patientID}/prescriptions/add`);
-        return {success: true, message: 'History added successfully'};
+        return { success: true, message: "History added successfully" };
     } catch (error) {
         console.log(error);
-        return {success: false, message: 'Error adding history'};
+        return { success: false, message: "Error adding history" };
     }
 }
 
-export async function deleteHistory({id}: { id: number }) {
+export async function deleteHistory({ id }: { id: number }) {
     const session = await verifySession();
-    if (session.role !== 'DOCTOR') {
-        return {success: false, message: 'Unauthorized'};
+    if (session.role !== "DOCTOR") {
+        return { success: false, message: "Unauthorized" };
     }
 
     try {
         await prisma.patientHistory.delete({
             where: {
-                id
-            }
+                id,
+            },
         });
-
-        revalidatePath(`/patients/[id]/history`);
-        revalidatePath(`/patients/[id]/prescriptions/add`);
-        return {success: true, message: 'History deleted successfully'};
+        return { success: true, message: "History deleted successfully" };
     } catch (error) {
         console.log(error);
-        return {success: false, message: 'Error deleting history'};
+        return { success: false, message: "Error deleting history" };
     }
 }
 
-export async function getHistoryCount({patientID}: { patientID: number }) {
+export async function getHistoryCount({ patientID }: { patientID: number }) {
     return await prisma.patientHistory.count({
         where: {
-            patientId: patientID
-        }
+            patientId: patientID,
+        },
     });
 }
 
-export async function getAllHistory({patientID}: { patientID: number }) {
+export async function getAllHistory({ patientID }: { patientID: number }) {
     return await prisma.patientHistory.findMany({
         where: {
-            patientId: patientID
+            patientId: patientID,
         },
         orderBy: {
-            time: 'desc'
-        }
-    })
+            time: "desc",
+        },
+    });
 }

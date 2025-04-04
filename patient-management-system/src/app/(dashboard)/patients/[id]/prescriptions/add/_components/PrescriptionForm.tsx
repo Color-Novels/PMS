@@ -6,28 +6,31 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
-import {FileText, ChevronLeft} from "lucide-react";
+import {FileText, ChevronLeft, X, BriefcaseMedical} from "lucide-react";
 import IssueFromInventory from "./IssueFromInventory";
-import {IssuingStrategy, MEAL, Vitals} from "@prisma/client";
+import {Charge, ChargeType, IssuingStrategy, MEAL, Vitals} from "@prisma/client";
 import type {DrugType} from "@prisma/client";
 import AddOffRecordDrugs from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/AddOffRecordDrugs";
 import {getTextColorClass, handleServerAction} from "@/app/lib/utils";
 import {addPrescription} from "@/app/lib/actions/prescriptions";
 import {
-    OffRecordMedsListProps, PrescriptionIssuesListProps,
+    OffRecordMedsListProps, OtherChargesListProps, PrescriptionIssuesListProps, ProcedureChargesListProps,
 } from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/PrescriptionIssuesList";
-import {FaHeadSideCough, FaMoneyBill} from "react-icons/fa";
+import {FaHeadSideCough} from "react-icons/fa";
 import {useRouter} from "next/navigation";
 import {Textarea} from "@/components/ui/textarea";
 import DynamicIcon from "@/app/(dashboard)/_components/DynamicIcon";
 import {IconName} from "@/app/lib/iconMapping";
-import {BasicColorType} from "@/app/(dashboard)/_components/CustomBadge";
+import {BasicColorType, CustomBadge} from "@/app/(dashboard)/_components/CustomBadge";
 import {Separator} from "@/components/ui/separator";
-import {RiDiscountPercentFill} from "react-icons/ri";
 import {toast} from "react-toastify";
 import {
     DiscountSubmitButtonProps
 } from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/DiscountSubmitButton";
+import {getChargesOnType} from "@/app/lib/actions/charges";
+import AddProcedureCharge from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/AddProcedure";
+import AddOtherCharge from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/AddOtherCharges";
+import Link from "next/link";
 
 const DiscountSubmitButton = dynamic<DiscountSubmitButtonProps>(
     () => import('@/app/(dashboard)/patients/[id]/prescriptions/add/_components/DiscountSubmitButton').then(mod => mod.DiscountSubmitButton),
@@ -41,6 +44,16 @@ const PrescriptionIssuesList = dynamic<PrescriptionIssuesListProps>(
 
 const OffRecordMedsList = dynamic<OffRecordMedsListProps>(
     () => import('@/app/(dashboard)/patients/[id]/prescriptions/add/_components/PrescriptionIssuesList').then(mod => mod.OffRecordMedsList),
+    {ssr: false}
+);
+
+const ProcedureChargesList = dynamic<ProcedureChargesListProps>(
+    () => import('@/app/(dashboard)/patients/[id]/prescriptions/add/_components/PrescriptionIssuesList').then(mod => mod.ProcedureChargesList),
+    {ssr: false}
+);
+
+const OtherChargesList = dynamic<OtherChargesListProps>(
+    () => import('@/app/(dashboard)/patients/[id]/prescriptions/add/_components/PrescriptionIssuesList').then(mod => mod.OtherChargesList),
     {ssr: false}
 );
 
@@ -61,6 +74,14 @@ export interface IssueInForm {
     concentrationID: number;
 }
 
+export interface FeeInPrescriptionForm {
+    id: number;
+    value: number;
+    description: string;
+    name: string;
+    type: ChargeType;
+}
+
 export interface OffRecordMeds {
     name: string;
     description?: string;
@@ -73,50 +94,76 @@ export interface VitalInForm extends Vitals {
 export interface PrescriptionFormData {
     presentingSymptoms: string;
     description: string;
-    extraDoctorCharges: number;
-    discount: number;
     issues: IssueInForm[];
     offRecordMeds: OffRecordMeds[];
     vitals: VitalInForm[];
+    charges: FeeInPrescriptionForm[];
 }
 
 const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: VitalInForm[] }) => {
-    console.log('Hi from PrescriptionForm');
-    const [formData, setFormData] = useState<PrescriptionFormData>((): PrescriptionFormData => {
+    const [formData, setFormData] = useState<PrescriptionFormData>(() => {
         if (typeof window !== 'undefined') {
             const savedForm = localStorage.getItem(`prescription-form-${patientID}`);
             if (savedForm) {
                 return JSON.parse(savedForm) as PrescriptionFormData;
             }
         }
-        return {
-            presentingSymptoms: '',
-            description: '',
-            extraDoctorCharges: 0,
-            issues: [],
-            offRecordMeds: [],
-            vitals: vitals,
-            discount: 0
-        };
+
+        return defaultFormData();
     });
+    const [feesFetching, setFeesFetching] = useState(false);
+
     const router = useRouter();
+
+    // Function to fetch charges and update state
+    const loadFixedCharges = async () => {
+        setFeesFetching(true);
+        const charges = await getChargesOnType({types: [ChargeType.FIXED, ChargeType.PERCENTAGE]});
+        setFeesFetching(false);
+        return charges.map(charge => ({...charge, description: ''}));
+    };
+
+    // Load charges on mount
+    // Load charges on mount
+    useEffect(() => {
+        loadFixedCharges().then(fixedCharges => {
+            setFormData(prev => {
+                // Filter out existing FIXED charges (if any) from the previous state
+                const nonFixedCharges = prev.charges.filter(
+                    charge => charge.type !== ChargeType.FIXED && charge.type !== ChargeType.PERCENTAGE
+                );
+
+                // Combine the new fixed charges with any non-fixed charges
+                return {
+                    ...prev,
+                    charges: [...nonFixedCharges, ...fixedCharges]
+                };
+            });
+        });
+    }, []);
 
     // Save to localStorage whenever formData changes
     useEffect(() => {
         localStorage.setItem(`prescription-form-${patientID}`, JSON.stringify(formData));
     }, [formData, patientID]);
 
-    function formReset() {
-        setFormData({
+    // Reset form with new charges
+    async function formReset() {
+        const charges = await loadFixedCharges();
+        setFormData(defaultFormData(charges));
+        localStorage.removeItem(`prescription-form-${patientID}`);
+    }
+
+    // Default form data generator
+    function defaultFormData(charges: Charge[] = []): PrescriptionFormData {
+        return {
             presentingSymptoms: '',
             description: '',
-            extraDoctorCharges: 0,
             issues: [],
-            discount: 0,
             offRecordMeds: [],
-            vitals: vitals
-        });
-        localStorage.removeItem(`prescription-form-${patientID}`);
+            vitals: vitals,
+            charges: charges.map(charge => ({...charge, description: ''})),
+        };
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -158,10 +205,29 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
         }));
     };
 
+    const handleAddCharge = (charge: FeeInPrescriptionForm) => {
+        // Check if already exists
+        const exists = formData.charges.find((c) => c.id === charge.id);
+        if (exists) {
+            toast.error('This charge already exists remove it and add again with preferred values', {position: "bottom-right"});
+            return;
+        }
+
+        setFormData((prevData) => ({
+            ...prevData,
+            charges: [...prevData.charges, charge]
+        }));
+    }
+
     const handleSubmit = async () => {
-        // Check for over 100 and below 0 discount
-        if (formData.discount > 100 || formData.discount < 0) {
-            toast.error('Discount should be between 0 and 100', {position: 'bottom-right'});
+        //Check for valid discount
+        const discountCharges = formData.charges.filter((charge) => charge.type === 'DISCOUNT');
+        const totalDiscount = discountCharges.reduce((total, charge) => total + charge.value, 0);
+        if (totalDiscount > 100) {
+            toast.error('Total discount cannot exceed 100%', {position: "bottom-right"});
+            return;
+        } else if (totalDiscount < 0) {
+            toast.error('Total discount cannot be negative', {position: "bottom-right"});
             return;
         }
 
@@ -180,7 +246,7 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
 
             console.log(result);
             if (result.success) {
-                formReset(); // This will also clear localStorage
+                await formReset(); // This will also clear localStorage
             }
         } catch (error) {
             console.error('Error submitting prescription:', error);
@@ -281,54 +347,6 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
                                     placeholder="Additional details..."
                                 />
                             </div>
-
-                            {/* Extra Doctor Charges Section - Moved Outside */}
-                            <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                    <FaMoneyBill className="h-4 w-4 text-orange-500"/>
-                                    <Label>Extra Doctor Charges</Label>
-                                </div>
-                                <Input
-                                    type="number"
-                                    name="extraDoctorCharges"
-                                    min={0}
-                                    value={formData.extraDoctorCharges}
-                                    onChange={handleChange}
-                                    placeholder="Enter extra charges..."
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                    <RiDiscountPercentFill className="h-4 w-4 text-emerald-500"/>
-                                    <Label>Discount</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input
-                                        type="number"
-                                        name="discount"
-                                        min={0}
-                                        max={100}
-                                        value={formData.discount}
-                                        onChange={handleChange}
-                                        placeholder="Enter discount..."
-                                    />
-                                    <h2>%</h2>
-                                    <Button
-                                        variant={"outline"}
-                                        size={'sm'}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setFormData((prevData) => ({
-                                                ...prevData,
-                                                discount: 100
-                                            }));
-                                        }}
-                                    >
-                                        100%
-                                    </Button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </Card>
@@ -370,13 +388,93 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
                     </div>
                 </Card>
 
+                <Card className={'bg-slate-100 p-4 transition-shadow duration-300'}>
+                    <div className="space-y-6">
+                        <h2 className="text-lg font-semibold">Procedures</h2>
+                        <ProcedureChargesList
+                            charges={formData.charges.filter(charge => charge.type === 'PROCEDURE')}
+                            onRemove={(index) => {
+                                const procedureCharges = formData.charges.filter(charge => charge.type === 'PROCEDURE');
+                                const chargeToRemove = procedureCharges[index];
+                                setFormData((prevData) => ({
+                                    ...prevData,
+                                    charges: prevData.charges.filter(charge => charge !== chargeToRemove)
+                                }));
+                            }}
+                        />
+                        <AddProcedureCharge addCharge={handleAddCharge}/>
+                        <div className={'flex justify-end'}>
+                            <Link href={'/admin/fees'}
+                                  className={'flex items-center space-x-2 text-blue-600 hover:underline text-sm'}>
+                                Customize
+                            </Link>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card className="bg-slate-100 p-4 transition-shadow duration-300">
+                    <div className="space-y-6">
+                        <h2 className="flex items-center text-lg font-semibold gap-2">Charges & Discounts</h2>
+                        <Card
+                            className={`p-4 cursor-pointer hover:shadow-md transition h-full overflow-hidden border-l-4 border-l-gray-800`}
+                        >
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-start space-x-4">
+                                    <div className="mt-1">
+                                        <BriefcaseMedical className={'h-5 w-5 text-blue-500'}/>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center space-x-2">
+                                            <h3 className="font-medium">Medicine charges</h3>
+                                            <CustomBadge text={'SYSTEM'} color={'gray'}/>
+                                        </div>
+
+                                        <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                            <FileText size={'20'}/>
+                                            <span>
+                                                This charge is automatically calculated based on the medicines issued at the bill. This charge is not removable.
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {/*Grayed out X*/}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-slate-500 hover:text-red-600"
+                                        disabled
+                                    >
+                                        <X className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            </div>
+                        </Card>
+                        <OtherChargesList
+                            charges={formData.charges.filter(charge => charge.type !== 'PROCEDURE')}
+                            onRemove={(index) => {
+                                const otherCharges = formData.charges.filter(charge => charge.type !== 'PROCEDURE');
+                                const chargeToRemove = otherCharges[index];
+                                setFormData((prevData) => ({
+                                    ...prevData,
+                                    charges: prevData.charges.filter(charge => charge !== chargeToRemove)
+                                }));
+                            }}
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <AddOtherCharge chargeType="FIXED" addCharge={handleAddCharge}/>
+                            <AddOtherCharge chargeType="PERCENTAGE" addCharge={handleAddCharge}/>
+                            <AddOtherCharge chargeType="DISCOUNT" addCharge={handleAddCharge}/>
+                        </div>
+                        <div className={'flex justify-end'}>
+                            <Link href={'/admin/fees'}
+                                  className={'flex items-center space-x-2 text-blue-600 hover:underline text-sm'}>
+                                Customize
+                            </Link>
+                        </div>
+                    </div>
+                </Card>
+
                 <div className="flex items-end h-full">
-                    <DiscountSubmitButton discount={formData.discount} onSubmit={handleSubmit} onDiscountRemove={() => {
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            discount: 0
-                        }));
-                    }}/>
+                    <DiscountSubmitButton charges={formData.charges} onSubmit={handleSubmit} disabled={feesFetching}/>
                 </div>
             </Card>
         </form>

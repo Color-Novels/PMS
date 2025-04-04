@@ -109,7 +109,7 @@ const BatchAssign = ({issues, prescriptionID, patientID, role}: {
         }
 
         return (
-            <div className="space-y-4 border-t border-gray-200 pt-4">
+            <div className="space-y-4">
                 <div className="flex justify-start items-center">
                     <span className="text font-semibold">Assign relevant Batches</span>
                 </div>

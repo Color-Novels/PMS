@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useCallback, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,23 +30,35 @@ import {
 } from "@/components/ui/dialog";
 import CustomDrugTypeSelect from "@/app/(dashboard)/inventory/available-stocks/_components/CustomDrugTypeSelect";
 import { SupplierSuggestionBox } from "@/app/(dashboard)/inventory/_components/SupplierSuggestionBox";
+import { DrugType } from "@prisma/client";
 
 export function DrugForm() {
-    const [isOpen, setIsOpen] = useState(false);
-    const [formData, setFormData] = useState<InventoryFormData>({
-        brandName: "",
-        drugName: "",
-        batchNumber: "",
-        drugType: "TABLET",
-        quantity: "",
-        expiry: "",
-        retailPrice: "",
-        wholesalePrice: "",
-        concentration: 0,
-        Buffer: 0,
-        supplierName: "",
-        supplierContact: "",
-    });
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState<InventoryFormData>({
+    brandName: "",
+    drugName: "",
+    batchNumber: "",
+    drugType: DrugType.TABLET,
+    quantity: "",
+    expiry: "",
+    retailPrice: "",
+    wholesalePrice: "",
+    concentration: 0,
+    Buffer: 0,
+    supplierName: "",
+    supplierContact: "",
+  });
+
+  // Add state to store complete buffer levels data
+  const [drugBufferLevels, setDrugBufferLevels] = useState<
+    Array<{
+      id: number;
+      drugId: number;
+      drugType: DrugType;
+      concentrationId: number;
+      bufferAmount: number;
+    }>
+  >([]);
 
   const [brandSuggestions, setBrandSuggestions] = useState<
     DrugBrandSuggestion[]
@@ -62,6 +75,40 @@ export function DrugForm() {
   const [showBrandSuggestions, setShowBrandSuggestions] = useState(false);
   const [showDrugSuggestions, setShowDrugSuggestions] = useState(false);
   const [showSupplierSuggestions, setShowSupplierSuggestions] = useState(false);
+
+  // Function to update buffer based on selected criteria
+  const updateBufferBasedOnSelection = useCallback(() => {
+    const { drugId, drugType, concentrationId } = formData;
+
+    // Only proceed if all three criteria are selected
+    if (!drugId || !drugType || !concentrationId) return;
+
+    // Find the matching buffer level
+    const matchingBufferLevel = drugBufferLevels.find(
+      (buffer) =>
+        buffer.drugId === drugId &&
+        buffer.drugType === drugType &&
+        buffer.concentrationId === concentrationId
+    );
+
+    // Update the buffer amount if a match is found
+    if (matchingBufferLevel) {
+      setFormData((prev) => ({
+        ...prev,
+        Buffer: matchingBufferLevel.bufferAmount,
+      }));
+    }
+  }, [formData, drugBufferLevels]);
+
+  // Call updateBuffer whenever any of the criteria changes
+  useEffect(() => {
+    updateBufferBasedOnSelection();
+  }, [
+    formData.drugId,
+    formData.drugType,
+    formData.concentrationId,
+    updateBufferBasedOnSelection,
+  ]);
 
   const handleConcentrationAdded = (
     newWeight: DrugConcentrationDataSuggestion
@@ -87,6 +134,7 @@ export function DrugForm() {
       concentration: newWeight.concentration,
     }));
   };
+
   const handleConcentrationDeleted = (
     deleteWeight: DrugConcentrationDataSuggestion
   ) => {
@@ -99,8 +147,8 @@ export function DrugForm() {
     if (formData.concentrationId === deleteWeight.id) {
       setFormData((prev) => ({
         ...prev,
-        weightId: undefined,
-        weight: 0,
+        concentrationId: undefined,
+        concentration: 0,
       }));
     }
   };
@@ -116,6 +164,7 @@ export function DrugForm() {
         concentration: selectedWeight ? selectedWeight.concentration : 0,
       };
     });
+    // Buffer will be updated by the useEffect when all criteria are met
   };
 
   const handleChange = (
@@ -176,6 +225,7 @@ export function DrugForm() {
       setSupplierSuggestions([]);
     }
   };
+
   const handleSupplierSelect = (suggestion: SupplierSuggestion) => {
     setFormData((prev) => ({
       ...prev,
@@ -187,10 +237,13 @@ export function DrugForm() {
   };
 
   const fetchDrugWeights = useCallback(async () => {
-    if (!formData.drugId) return;
+    if (!formData.drugId || !formData.drugType) return;
 
     try {
-      const weights = await getDrugConcentrations(formData.drugId);
+      const weights = await getDrugConcentrations(
+        formData.drugId,
+        formData.drugType
+      );
       const uniqueWeights = Array.from(
         new Map(weights.map((weight) => [weight.id, weight])).values()
       );
@@ -199,7 +252,7 @@ export function DrugForm() {
       console.error("Error fetching drug weights:", error);
       setDrugConcentrations([]);
     }
-  }, [formData.drugId]); // Dependencies ensure this function updates when drugId changes
+  }, [formData.drugId, formData.drugType]); // Dependencies ensure this function updates when drugId changes
 
   // Fetch when drugId changes
   useEffect(() => {
@@ -219,7 +272,14 @@ export function DrugForm() {
   const handleDrugSearch = async (query: string) => {
     try {
       const results = await searchDrugModels(query);
-      setDrugSuggestions(results);
+      // Transform results to match DrugModelSuggestion type
+      const transformedResults = results.map((result) => ({
+        id: result.id,
+        name: result.name,
+        bufferLevels: result.bufferLevels, // Include bufferLevels if needed
+      }));
+
+      setDrugSuggestions(transformedResults);
     } catch (error) {
       console.error("Error searching drugs:", error);
       setDrugSuggestions([]);
@@ -240,8 +300,20 @@ export function DrugForm() {
       ...prev,
       drugId: suggestion.id,
       drugName: suggestion.name,
-      Buffer: suggestion.Buffer ?? 0,
+      // Don't set Buffer immediately here
     }));
+
+    // Store the complete bufferLevels data for later use
+    setDrugBufferLevels(
+      (suggestion.bufferLevels || []).map((buffer) => ({
+        id: buffer.id,
+        drugId: suggestion.id,
+        drugType: buffer.type,
+        concentrationId: buffer.unitConcentration.id,
+        bufferAmount: buffer.bufferAmount,
+      }))
+    );
+
     setShowDrugSuggestions(false);
   };
 
@@ -253,27 +325,27 @@ export function DrugForm() {
         loadingMessage: "Adding new item...",
       });
 
-            if (result.success) {
-                setIsOpen(false);
-                setFormData({
-                    brandName: "",
-                    drugName: "",
-                    batchNumber: "",
-                    drugType: "TABLET",
-                    quantity: "",
-                    expiry: "",
-                    wholesalePrice: "",
-                    retailPrice: "",
-                    concentration: 0,
-                    Buffer: 0,
-                    supplierName: "",
-                    supplierContact: "",
-                });
-            }
-        } catch (error) {
-            console.error("Error submitting form:", error);
-        }
-    };
+      if (result.success) {
+        setIsOpen(false);
+        setFormData({
+          brandName: "",
+          drugName: "",
+          batchNumber: "",
+          drugType: DrugType.TABLET,
+          quantity: "",
+          expiry: "",
+          wholesalePrice: "",
+          retailPrice: "",
+          concentration: 0,
+          Buffer: 0,
+          supplierName: "",
+          supplierContact: "",
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -381,7 +453,7 @@ export function DrugForm() {
             <CustomDrugTypeSelect
               value={formData.drugType}
               onValueChange={(value) =>
-                setFormData({ ...formData, drugType: value })
+                setFormData({ ...formData, drugType: value as DrugType })
               }
             />
           </div>

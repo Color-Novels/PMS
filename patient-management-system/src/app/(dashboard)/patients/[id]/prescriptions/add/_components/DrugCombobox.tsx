@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/command";
 import {cn} from "@/lib/utils";
 import type {DrugOption} from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/IssueFromInventory";
-import {CustomBadge} from "@/app/(dashboard)/_components/CustomBadge";
 
 interface PopoverSelectProps {
     options: DrugOption[];
@@ -95,11 +94,8 @@ const DrugCombobox = ({
                                     key={option.id}
                                     value={String(option.id)}
                                     onSelect={() => handleSelect(option)}
-                                    className="flex items-center justify-between"
                                 >
                                     <span>{option.name}</span>
-                                    <CustomBadge text={`${option.remaining} / ${option.buffer}`}
-                                                 color={`${option.remaining > option.buffer ? "green" : "red"}`}/>
                                     <Check
                                         className={cn(
                                             "ml-auto h-4 w-4 text-primary",

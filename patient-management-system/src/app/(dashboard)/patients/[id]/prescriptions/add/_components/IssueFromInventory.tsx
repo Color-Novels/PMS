@@ -36,8 +36,6 @@ interface IssuesListProps {
 export type DrugOption = {
     id: number;
     name: string;
-    buffer: number;
-    remaining: number;
 }
 
 export type CustomDrugType = {
@@ -443,7 +441,6 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
         setWarning(null);
         setSelectedBrand(null);
         resetStrategy();
-
         setSelectedConcentration(selected);
         if (!selectedDrug || !selectedType || !selected) return;
         showWarnings(selected);

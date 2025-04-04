@@ -1,5 +1,5 @@
 import type {LucideIcon} from "lucide-react";
-import {Role} from "@prisma/client";
+import {ChargeType, Role} from "@prisma/client";
 import type {DrugType} from "@prisma/client";
 
 export type SessionPayload = {
@@ -216,15 +216,31 @@ export interface PieChartData {
 }
 
 export interface DrugBrandSuggestion {
+  id: number;
+  name: string;
+  bufferLevels?: {
     id: number;
-    name: string;
-    Buffer?: number;
+    type: DrugType;
+    bufferAmount: number;
+    unitConcentration: {
+      id: number;
+      concentration: number;
+    };
+  }[];
 }
 
 export interface DrugModelSuggestion {
+  id: number;
+  name: string;
+  bufferLevels?: {
     id: number;
-    name: string;
-    Buffer?: number;
+    type: DrugType;
+    bufferAmount: number;
+    unitConcentration: {
+      id: number;
+      concentration: number;
+    };
+  }[];
 }
 
 export interface DrugConcentrationDataSuggestion {
@@ -239,15 +255,19 @@ export type BillEntry = {
     unitPrice: number;
 };
 
+export type ChargeEntry = {
+    name: string;
+    value: number;
+    description?: string;
+    type: ChargeType;
+}
+
 export type Bill = {
     prescriptionID: number;
-    discount: number;
     patientName: string;
     entries: BillEntry[];
-    medicineCost: number;
+    charges: ChargeEntry[];
     patientID: number;
-    dispensary_charge: number;
-    doctor_charge: number;
 };
 
 export type MedicalCertificate = {
@@ -316,13 +336,18 @@ export interface SupplierSuggestion {
 }
 
 export interface DrugModelsWithBufferLevel {
-    id: number;
-    name: string;
-    bufferLevel: number;
-    availableAmount: number;
-    fullAmount: number;
+  id: number;
+  name: string;
+  availableAmount: number;
+  fullAmount: number;
+  bufferLevels: {
+    type: DrugType;
+    unitConcentration: {
+      concentration: number;
+    };
+    bufferAmount: number;
+  }[];
 }
-
 
 export type PrescriptionCard = {
     id: number;

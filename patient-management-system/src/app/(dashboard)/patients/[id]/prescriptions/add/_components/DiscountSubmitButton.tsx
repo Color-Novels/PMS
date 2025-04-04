@@ -12,26 +12,29 @@ import {
     AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
 import {useState} from "react";
+import {FeeInPrescriptionForm} from './PrescriptionForm';
 
 export interface DiscountSubmitButtonProps {
-    discount: number;
+    charges: FeeInPrescriptionForm[];
     onSubmit: () => void;
-    onDiscountRemove?: () => void;
+    disabled?: boolean;
 }
 
-export function DiscountSubmitButton({discount, onSubmit, onDiscountRemove}: DiscountSubmitButtonProps) {
+export function DiscountSubmitButton({charges, onSubmit, disabled}: DiscountSubmitButtonProps) {
     const [open, setOpen] = useState(false);
 
-    const handleRemoveDiscount = () => {
-        if (onDiscountRemove) {
-            console.log('Calling onDiscountRemove');
-            onDiscountRemove();
-        }
-    };
+    // Get discount charges
+    const discountCharges = charges.filter((charge) => charge.type === 'DISCOUNT');
+
+    // Calculate total discount percentage
+    const totalDiscount = discountCharges.reduce((total, charge) => total + charge.value, 0);
+
+    // Check if there are any discount charges
+    const hasDiscounts = discountCharges.length > 0;
 
     return (
         <>
-            {discount === 0 ? (
+            {!hasDiscounts ? (
                 <Button
                     type="submit"
                     size="lg"
@@ -40,6 +43,7 @@ export function DiscountSubmitButton({discount, onSubmit, onDiscountRemove}: Dis
                         e.preventDefault();
                         onSubmit();
                     }}
+                    disabled={disabled}
                 >
                     Submit Prescription
                 </Button>
@@ -50,40 +54,37 @@ export function DiscountSubmitButton({discount, onSubmit, onDiscountRemove}: Dis
                             variant="destructive"
                             size="lg"
                             className="px-8 w-full"
+                            disabled={disabled}
                         >
-                            Submit Prescription with {discount}% discount
+                            Submit Prescription with {totalDiscount}% discount
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>
-                                Apply <span className="font-semibold text-red-500">{discount}%</span> Discount?
+                                Apply <span className="font-semibold text-red-500">{totalDiscount}%</span> Discount?
                             </AlertDialogTitle>
                             <AlertDialogDescription>
                                 Are you sure you want to submit the prescription with a discount
-                                of <strong>{discount}%</strong>?
+                                of <strong>{totalDiscount}%</strong>?
                             </AlertDialogDescription>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>
-                                    Cancel
-                                </AlertDialogCancel>
-                                <Button onClick={() => {
-                                    setOpen(false);
-                                    handleRemoveDiscount();
-                                }}>
-                                    Remove discount
-                                </Button>
-                                <Button variant="destructive" onClick={() => {
-                                    setOpen(false);
-                                    onSubmit();
-                                }}>
-                                    Submit with discount
-                                </Button>
-                            </AlertDialogFooter>
                         </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>
+                                Cancel
+                            </AlertDialogCancel>
+                            <Button variant="destructive" onClick={() => {
+                                setOpen(false);
+                                onSubmit();
+                            }}>
+                                Submit with discount
+                            </Button>
+                        </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
             )}
         </>
     );
 }
+
+export default DiscountSubmitButton;

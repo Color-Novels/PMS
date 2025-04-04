@@ -25,10 +25,16 @@ export async function completePrescription(
                 issues: {
                     include: {batch: true},
                 },
+                Charges: {
+                    where: {
+                        type: "MEDICINE"
+                    }
+                }
             },
         });
 
         // Validation checks before transaction
+
         if (!prescription) {
             return {success: false, message: "Prescription not found"};
         }
@@ -41,6 +47,14 @@ export async function completePrescription(
         const missingBatchIssue = prescription.issues.find(issue => !issue.batch || !issue.batchId);
         if (missingBatchIssue) {
             return {success: false, message: "Batch not found for a drug"};
+        }
+
+        // Check if final medicine cost is not calculated
+        if (prescription.Charges.length === 0 || prescription.finalPrice === null) {
+            return {
+                success: false,
+                message: "You have to generate bill at least once"
+            }
         }
 
         // Perform all database operations in a transaction
@@ -180,6 +194,11 @@ export async function getPrescription(
                 },
             },
             OffRecordMeds: true,
+            Charges: {
+                where: {
+                    type: 'PROCEDURE',
+                },
+            },
             ...(session.role === "DOCTOR"
                 ? {
                     PrescriptionVitals: {
@@ -314,6 +333,7 @@ export async function searchPrescriptions({
                     name: true,
                 },
             },
+            Charges: true,
             ...select,
         },
     });
@@ -434,17 +454,15 @@ export async function addPrescription({
                 value: vital.value,
             }));
 
+        const chargesData = prescriptionForm.charges.map(charge => ({
+            value: charge.value,
+            type: charge.type,
+            name: charge.name,
+            description: charge.description,
+        }));
+
         // Execute database operations in a transaction with optimized queries
         const queueId = await prisma.$transaction(async (tx) => {
-            // Fetch charges in parallel
-            const [dispCharge, docCharge] = await Promise.all([
-                tx.charge.findUnique({where: {name: 'DISPENSARY'}}),
-                tx.charge.findUnique({where: {name: 'DOCTOR'}})
-            ]);
-
-            const dispensaryCharge = dispCharge?.value || 0;
-            const doctorCharge = Number(prescriptionForm.extraDoctorCharges) + (docCharge?.value || 0);
-
             // Create prescription with all related data in one operation
             const prescription = await tx.prescription.create({
                 data: {
@@ -455,11 +473,8 @@ export async function addPrescription({
                     issues: {create: issuesData},
                     OffRecordMeds: {create: offRecordMedsData},
                     PrescriptionVitals: {create: vitalsData},
-                    doctorCharge,
-                    dispensaryCharge,
-                    medicinesCharge: 0,
-                    discount: Number(prescriptionForm.discount),
-                },
+                    Charges: {create: chargesData},
+                },//
                 select: {
                     id: true,
                     issues: {select: {id: true, drugId: true}}
@@ -504,30 +519,14 @@ export async function addPrescription({
             message: "Prescription created successfully",
         };
     } catch (e) {
-        console.error("Error adding prescription:");
+        if (e instanceof Error) {
+            console.error(e.message);
+        }
         return {
             success: false,
-            message: e instanceof Error
-                ? e.message
-                : "An error occurred while adding prescription",
+            message: "An error occurred while adding prescription",
         };
     }
-}
-
-export async function safeAddPrescription({
-                                              prescriptionForm,
-                                              patientID,
-                                          }: {
-    prescriptionForm: PrescriptionFormData;
-    patientID: number;
-}): Promise<myError | myConfirmation> {
-    if ((Number(prescriptionForm.discount) !== 0)) {
-        return {
-            confirmationRequired: true,
-            message: "There is a discount applied to this prescription. Are you sure you want to proceed?",
-        }
-    }
-    return addPrescription({prescriptionForm, patientID});
 }
 
 export async function getCachedStrategy(drugID: number) {
@@ -570,23 +569,12 @@ export async function searchAvailableDrugs(term: string): Promise<DrugOption[]> 
             select: {
                 id: true,
                 name: true,
-                Buffer: true,
-                batch: {
-                    where: {
-                        status: "AVAILABLE",
-                    },
-                    select: {
-                        remainingQuantity: true,
-                    },
-                },
             },
         })
         .then((drugs) =>
             drugs.map((drug) => ({
                 id: drug.id,
                 name: drug.name,
-                buffer: drug.Buffer,
-                remaining: drug.batch.reduce((acc, batch) => acc + batch.remainingQuantity, 0),
             }))
         );
 }

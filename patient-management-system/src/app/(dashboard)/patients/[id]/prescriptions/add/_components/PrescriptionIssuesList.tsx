@@ -5,7 +5,7 @@ import {
     Calendar,
     AlertCircle,
     Info,
-    X, FileText, Moon, Sun, Sunset, Tally3, Tally4, Tally2, Tally1,
+    X, FileText, Moon, Sun, Sunset, Tally3, Tally4, Tally2, Tally1, ClipboardList, CreditCard, Percent, Tag,
 } from "lucide-react";
 import {FaPills, FaCapsules, FaWineBottle, FaEyeDropper, FaAssistiveListeningSystems} from 'react-icons/fa';
 import {MdOutlineHealing} from 'react-icons/md';
@@ -15,9 +15,10 @@ import {TbBottle} from 'react-icons/tb';
 import {CgPill, CgSmileMouthOpen} from 'react-icons/cg';
 import {BiSolidFlask} from 'react-icons/bi';
 import {Button} from "@/components/ui/button";
-import {IssuingStrategy, MEAL} from "@prisma/client";
+import {ChargeType, IssuingStrategy, MEAL} from "@prisma/client";
 import type {DrugType} from "@prisma/client";
 import type {
+    FeeInPrescriptionForm,
     IssueInForm,
     OffRecordMeds
 } from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/PrescriptionForm";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {AlertDialogTitle} from "@radix-ui/react-alert-dialog";
 import {FaSprayCan} from "react-icons/fa6";
+import {compareChargeTypes} from "@/app/lib/utils";
 
 
 export interface StrategyIconProps {
@@ -303,7 +305,7 @@ export function PrescriptionIssuesList({issues, onRemove}: PrescriptionIssuesLis
                 const {borderColor, badgeColor} = getStrategyStyles(issue.strategy);
                 return (
                     <Card key={index}
-                          className={`p-4 cursor-pointer hover:shadow-md transition h-full overflow-hidden border-l-4 ${borderColor}`}>
+                          className={`p-4 cursor-default hover:shadow-md transition h-full overflow-hidden border-l-4 ${borderColor}`}>
                         <div className="flex items-start justify-between">
                             <div className="flex items-start space-x-4">
                                 <div className="mt-1">
@@ -369,7 +371,7 @@ export function OffRecordMedsList({meds, onRemove}: OffRecordMedsListProps) {
         <div className="space-y-3">
             {meds.map((med, index) => (
                 <Card key={index}
-                      className="p-4 cursor-pointer hover:shadow-md transition h-full overflow-hidden border-l-4 border-l-slate-500">
+                      className="p-4 cursor-default hover:shadow-md transition h-full overflow-hidden border-l-4 border-l-slate-500">
                     <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-4">
                             <div className="mt-1">
@@ -381,7 +383,7 @@ export function OffRecordMedsList({meds, onRemove}: OffRecordMedsListProps) {
                                 </div>
                                 {med.description && (
                                     <div className="flex items-center space-x-2 text-sm text-slate-600">
-                                        <FileText className="h-4 w-4"/>
+                                        <FileText size={20}/>
                                         <span>{med.description}</span>
                                     </div>
                                 )}
@@ -417,6 +419,232 @@ export function OffRecordMedsList({meds, onRemove}: OffRecordMedsListProps) {
                     </div>
                 </Card>
             ))}
+        </div>
+    );
+}
+
+export interface ProcedureChargesListProps {
+    charges: FeeInPrescriptionForm[];
+    onRemove: (index: number) => void;
+}
+
+export function ProcedureChargesList({charges, onRemove}: ProcedureChargesListProps) {
+    return (
+        <div className="space-y-3">
+            {charges.length !== 0 && (
+                charges.map((charge, index) => (
+                    <Card
+                        key={index}
+                        className="p-4 cursor-default hover:shadow-md transition h-full overflow-hidden border-l-4 border-l-purple-500"
+                    >
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-start space-x-4">
+                                <div className="mt-1">
+                                    <ClipboardList className="h-5 w-5 text-purple-500"/>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center space-x-2">
+                                        <h3 className="font-medium">{charge.name}</h3>
+                                        <CustomBadge text={charge.type} color={'purple'}/>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                        <span className="font-semibold">{charge.value.toFixed(2)} LKR</span>
+                                    </div>
+
+                                    {charge.description && (
+                                        <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                            <FileText size={18}/>
+                                            <span>{charge.description}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-slate-500 hover:text-red-600"
+                                    >
+                                        <X className="h-4 w-4"/>
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Remove Procedure Charge?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Are you sure you want to remove {charge.name} from the list?
+                                            This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={() => onRemove(index)}
+                                            className="bg-red-600 text-white hover:bg-red-700"
+                                        >
+                                            Remove
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
+                    </Card>
+                ))
+            )}
+        </div>
+    );
+}
+
+
+export interface OtherChargesListProps {
+    charges: FeeInPrescriptionForm[];
+    onRemove: (index: number) => void;
+}
+
+const getChargeIcon = (type: ChargeType) => {
+    switch (type) {
+        case 'FIXED':
+            return <CreditCard className="h-5 w-5 text-blue-500"/>;
+        case 'PERCENTAGE':
+            return <Percent className="h-5 w-5 text-green-500"/>;
+        case 'DISCOUNT':
+            return <Tag className="h-5 w-5 text-amber-500"/>;
+        default:
+            return <CreditCard className="h-5 w-5 text-blue-500"/>;
+    }
+};
+
+const getCardBorderColor = (type: ChargeType) => {
+    switch (type) {
+        case 'FIXED':
+            return 'border-l-blue-500';
+        case 'PERCENTAGE':
+            return 'border-l-green-500';
+        case 'DISCOUNT':
+            return 'border-l-amber-500';
+        default:
+            return 'border-l-blue-500';
+    }
+};
+
+const getBadgeColor = (type: ChargeType): keyof BasicColorType => {
+    switch (type) {
+        case 'FIXED':
+            return 'blue';
+        case 'PERCENTAGE':
+            return 'green';
+        case 'DISCOUNT':
+            return 'amber';
+        default:
+            return 'blue';
+    }
+};
+
+const getValueSuffix = (type: ChargeType) => {
+    switch (type) {
+        case 'FIXED':
+            return 'LKR';
+        case 'PERCENTAGE':
+            return '%';
+        case 'DISCOUNT':
+            return '%';
+        default:
+            return '';
+    }
+};
+
+export function OtherChargesList({charges, onRemove}: OtherChargesListProps) {
+    // Filter out PROCEDURE charges
+    const filteredCharges = charges.filter(charge => charge.type !== 'PROCEDURE');
+
+    // Sort using the custom order
+    filteredCharges.sort((a, b) => {
+        // Get the order values for each charge type
+        return compareChargeTypes(a.type, b.type);
+    });
+
+    return (
+        <div className="space-y-3">
+            {filteredCharges.length === 0 ? (
+                <div className="text-center p-4 text-slate-500">
+                    No charges or discounts added
+                </div>
+            ) : (
+                filteredCharges.map((charge, index) => {
+                    const borderColor = getCardBorderColor(charge.type);
+                    const badgeColor = getBadgeColor(charge.type);
+                    const valueSuffix = getValueSuffix(charge.type);
+
+                    return (
+                        <Card
+                            key={index}
+                            className={`p-4 cursor-default hover:shadow-md transition h-full overflow-hidden border-l-4 ${borderColor}`}
+                        >
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-start space-x-4">
+                                    <div className="mt-1">
+                                        {getChargeIcon(charge.type)}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center space-x-2">
+                                            <h3 className="font-medium">{charge.name}</h3>
+                                            <CustomBadge text={charge.type} color={badgeColor}/>
+                                        </div>
+
+                                        <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                            {charge.type === 'FIXED' ? (
+                                                <span
+                                                    className="font-semibold">{valueSuffix} {charge.value.toFixed(2)}</span>
+                                            ) : (
+                                                <span
+                                                    className="font-semibold">{charge.value.toFixed(2)}{valueSuffix}</span>
+                                            )}
+                                        </div>
+
+                                        {charge.description && (
+                                            <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                                <FileText size={18} className="flex-shrink-0"/>
+                                                <span>{charge.description}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-slate-500 hover:text-red-600"
+                                        >
+                                            <X className="h-4 w-4"/>
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Remove {charge.type === 'DISCOUNT' ? 'Discount' : 'Charge'}?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Are you sure you want to remove {charge.name} from the list?
+                                                This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={() => onRemove(index)}
+                                                className="bg-red-600 text-white hover:bg-red-700"
+                                            >
+                                                Remove
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        </Card>
+                    );
+                })
+            )}
         </div>
     );
 }
