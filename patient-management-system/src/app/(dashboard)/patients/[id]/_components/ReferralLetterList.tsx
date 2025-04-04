@@ -70,7 +70,7 @@ export function ReferralLetterList({ patientId, limit }: ReferralLetterListProps
         </div>
         <h3 className="text-lg font-medium mb-1">No referral letters found</h3>
         <p className="text-muted-foreground text-center mb-4">
-          This patient doesn't have any referral letters yet.
+          This patient does not have any referral letters yet.
         </p>
       </div>
     );

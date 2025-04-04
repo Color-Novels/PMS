@@ -27,7 +27,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { USSReferral } from '@/app/lib/definitions';
 import { deleteUSSReferral } from '../documents/lib/actions';
 import { CustomBadge } from "@/app/(dashboard)/_components/CustomBadge";

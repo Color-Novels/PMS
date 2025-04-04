@@ -70,7 +70,7 @@ export function USSReferralList({ patientId, limit }: USSReferralListProps) {
         </div>
         <h3 className="text-lg font-medium mb-1">No referrals found</h3>
         <p className="text-muted-foreground text-center mb-4">
-          This patient doesn't have any USS referrals yet.
+          This patient does not have any USS referrals yet.
         </p>
       </div>
     );

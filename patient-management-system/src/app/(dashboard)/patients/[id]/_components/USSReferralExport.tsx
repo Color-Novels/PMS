@@ -79,16 +79,6 @@ export function USSReferralExport({ patientId }: { patientId?: number }) {
     };
 
 
-    const formatDate = (dateString: string) => {
-        if (!dateString) return "";
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
     const exportToPDF = async () => {
         try {
             const nextReferralId = await getNextUSSReferralId();
