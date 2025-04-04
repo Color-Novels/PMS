@@ -36,8 +36,90 @@ export default function AddPatientForm({text}: { text?: string }) {
         gender: "",
     });
 
+    const parseNIC = (nic: string) => {
+        // Return early if NIC is not valid
+        if (!nic || nic.length < 10) return null;
+        
+        let year: string;
+        let monthDateCode: number;
+        let gender: Gender = "";
+        
+        // New NIC format (12 digits): YYYYMMMDDDXXC
+        if (nic.length === 12 && /^\d+$/.test(nic)) {
+            year = nic.substring(0, 4);
+            monthDateCode = parseInt(nic.substring(4, 7));
+            
+            // If monthDateCode >= 500, it's female and we need to subtract 500
+            if (monthDateCode >= 500) {
+                monthDateCode -= 500;
+                gender = "FEMALE";
+            } else {
+                gender = "MALE";
+            }
+        } 
+        // Old NIC format (9 digits + V/X): YYMMMDDDXV/X
+        else if (nic.length === 10 && /^\d{9}[VvXx]$/.test(nic)) {
+            // Get the year (19XX for old NICs)
+            year = "19" + nic.substring(0, 2);
+            monthDateCode = parseInt(nic.substring(2, 5));
+            
+            // If monthDateCode >= 500, it's female and we need to subtract 500
+            if (monthDateCode >= 500) {
+                monthDateCode -= 500;
+                gender = "FEMALE";
+            } else {
+                gender = "MALE";
+            }
+        } else {
+            return null;
+        }
+        
+        // Convert the monthDateCode to actual month and day
+        // Sri Lankan NIC format: first 30 days are Jan, next 31 days are Feb, etc.
+        const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        let month = 0;
+        let day = monthDateCode;
+        
+        // Find the correct month and day
+        while (day > daysInMonth[month]) {
+            day -= daysInMonth[month];
+            month++;
+            if (month >= 12) break; // Safety check
+        }
+        
+        // JavaScript months are 0-indexed, so month is already correct
+        try {
+            // Format date as YYYY-MM-DD for input type="date"
+            const formattedMonth = (month + 1).toString().padStart(2, '0');
+            const formattedDay = day.toString().padStart(2, '0');
+            const formattedDate = `${year}-${formattedMonth}-${formattedDay}`;
+            
+            return {
+                birthDate: formattedDate,
+                gender: gender
+            };
+        } catch (e) {
+            console.error("Error parsing NIC:", e);
+            return null;
+        }
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({...formData, [e.target.name]: e.target.value});
+        const { name, value } = e.target;
+        setFormData({...formData, [name]: value});
+        
+        // If NIC field is changed, try to extract birth date and gender
+        if (name === "NIC") {
+            const nicInfo = parseNIC(value);
+            if (nicInfo) {
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: value,
+                    birthDate: nicInfo.birthDate,
+                    gender: nicInfo.gender
+                }));
+            }
+        }
     };
 
     const handleGenderChange = (value: Gender) => {
