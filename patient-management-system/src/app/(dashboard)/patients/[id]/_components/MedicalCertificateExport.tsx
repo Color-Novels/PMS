@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FileText } from "lucide-react";
-import getNextMedicalCertificateId, { fetchPatientData, storeMedicalCertificate } from "@/app/lib/actions";
+import {getNextMedicalCertificateId, fetchPatientData, storeMedicalCertificate } from "../documents/lib/actions";
 
 export function MedicalCertificateExport({ patientId }: { patientId?: number }) {
     const [open, setOpen] = useState(false);
@@ -208,18 +208,18 @@ export function MedicalCertificateExport({ patientId }: { patientId?: number }) 
             }
 
             // Certificate issue date and signature - positioned near bottom
-            const signatureY = 170;
+            const signatureY = 185;
             pdf.setFontSize(10);  // Increased from 8
             pdf.text(`Date: ${formatDate(formData.reportDate)}`, marginLeft, signatureY);
 
             // Signature line
-            pdf.line(pageWidth - 65, signatureY, pageWidth - marginRight, signatureY);
+            pdf.line(pageWidth - 65, signatureY - 3, pageWidth - marginRight, signatureY - 3);
             pdf.setFontSize(9);  // Increased from 7
-            pdf.text("Signature", pageWidth - 38, signatureY + 5, { align: "center" });
+            pdf.text("Signature", pageWidth - 38, signatureY + 2, { align: "center" });
 
             // Footer with certificate ID
             pdf.setFontSize(8);  // Increased from 6
-            pdf.text(`Certificate ID: MC-${nextMCId}`, centerX, 190, { align: "center" });
+            pdf.text(`Certificate ID: MC-${nextMCId}`, centerX, 200, { align: "center" });
 
             // Save the PDF with a dynamic filename
             const filename = formData.patientName

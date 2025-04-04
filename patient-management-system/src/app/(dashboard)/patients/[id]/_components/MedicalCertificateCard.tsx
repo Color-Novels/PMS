@@ -29,7 +29,7 @@ import {
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
 import {MedicalCertificate} from '@/app/lib/definitions';
-import {deleteMedicalCertificate} from '@/app/lib/actions';
+import {deleteMedicalCertificate} from '../documents/lib/actions';
 import {CustomBadge} from "@/app/(dashboard)/_components/CustomBadge";
 
 interface MedicalCertificateCardProps {

@@ -12,6 +12,8 @@ import {
   StockData,
   StockQueryParams,
 } from "@/app/lib/definitions";
+import {prisma} from "./prisma";
+import { BatchStatus, DrugType} from "@prisma/client";
 import { prisma } from "./prisma";
 import { $Enums, BatchStatus, DrugType } from "@prisma/client";
 import MedicalCertificateStatus = $Enums.MedicalCertificateStatus;
@@ -1699,113 +1701,6 @@ export async function getDrugModelStats(drugId: number) {
   } catch (error) {
     console.error("Error fetching stock analysis:", error);
     throw new Error("Failed to fetch stock analysis");
-  }
-}
-
-interface PatientData {
-  id: number;
-  name: string;
-  birthDate?: Date | null;
-  address?: string | null;
-}
-
-/**
- * Fetches patient data from the database
- * @param patientId - The ID of the patient to fetch
- * @returns Promise with patient data or null if not found
- */
-export async function fetchPatientData(
-  patientId: number
-): Promise<PatientData | null> {
-  try {
-    // Query the database for the patient with the given ID
-    return await prisma.patient.findUnique({
-      where: {
-        id: patientId,
-      },
-      select: {
-        id: true,
-        name: true,
-        birthDate: true,
-        address: true,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching patient data:", error);
-    throw new Error("Failed to fetch patient data");
-  }
-}
-
-interface MedicalCertificateData {
-  patientId: number;
-  nameOfThePatient: string;
-  addressOfThePatient: string;
-  fitForDuty: string;
-  dateOfSickness: string;
-  recommendedLeaveDays: string;
-  natureOfTheDisease: string;
-  ageOfThePatient: string;
-  reccomendations: string;
-}
-
-export async function storeMedicalCertificate(data: MedicalCertificateData) {
-  try {
-    return await prisma.medicalCertificate.create({
-      data: {
-        patientId: data.patientId,
-        nameOfThePatient: data.nameOfThePatient,
-        addressOfThePatient: data.addressOfThePatient,
-        fitForDuty:
-          data.fitForDuty === "Yes"
-            ? MedicalCertificateStatus.FIT
-            : MedicalCertificateStatus.UNFIT,
-        dateOfSickness: new Date(data.dateOfSickness),
-        recommendedLeaveDays: parseInt(data.recommendedLeaveDays),
-        natureOfTheDisease: data.natureOfTheDisease,
-        ageOfThePatient: parseInt(data.ageOfThePatient),
-        reccomendations: data.reccomendations,
-        time: new Date(),
-      },
-    });
-  } catch (error) {
-    console.error("Error storing medical certificate:", error);
-    throw new Error("Failed to store medical certificate");
-  }
-}
-
-const getNextMedicalCertificateId = async (): Promise<number> => {
-  const latestCertificate = await prisma.medicalCertificate.findFirst({
-    orderBy: { id: "desc" },
-    select: { id: true },
-  });
-
-  return latestCertificate ? latestCertificate.id + 1 : 1;
-};
-
-export default getNextMedicalCertificateId;
-
-export async function getMedicalCertificates(patientId: number) {
-  try {
-    return await prisma.medicalCertificate.findMany({
-      where: { patientId },
-      orderBy: { time: "desc" },
-    });
-  } catch (error) {
-    console.error("Failed to fetch certificates:", error);
-    throw new Error("Failed to fetch certificates");
-  }
-}
-
-export async function deleteMedicalCertificate(id: number) {
-  try {
-    await prisma.medicalCertificate.delete({
-      where: { id },
-    });
-    revalidatePath("/patients/[id]");
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to delete certificate:", error);
-    throw new Error("Failed to delete certificate");
   }
 }
 

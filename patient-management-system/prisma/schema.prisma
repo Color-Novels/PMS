@@ -24,6 +24,8 @@ model Patient {
   reports        PatientReport[]
   prescription   Prescription[]
   queueEntry     QueueEntry[]
+  USSReferral    USSReferral[]
+  referralLetters ReferralLetter[]
 }
 
 model PatientHistory {
@@ -196,6 +198,39 @@ model MedicalCertificate {
   reccomendations      String
   time                 DateTime
   patient              Patient                  @relation(fields: [patientId], references: [id])
+}
+
+model USSReferral {
+  id                  Int       @id @default(autoincrement())
+  patientId           Int
+  nameOfThePatient    String
+  presentingComplaint String
+  duration            String
+  onExamination       String
+  pshx_pmhx           String
+  ageOfThePatient     Int
+  reportDate          DateTime
+  USS_type            String
+  radiologist         String
+  radiologist_title   String
+  time                DateTime  @default(now())
+  patient             Patient   @relation(fields: [patientId], references: [id])
+}
+
+model ReferralLetter {
+  id                   Int       @id @default(autoincrement())
+  patientId            Int
+  nameOfThePatient     String
+  consultant_speciality String
+  consultant_name      String
+  condition1           String
+  condition2           String
+  condition3           String
+  investigations       String
+  ageOfThePatient      Int
+  reportDate          DateTime
+  time                DateTime  @default(now())
+  patient             Patient   @relation(fields: [patientId], references: [id])
 }
 
 model OffRecordMeds {

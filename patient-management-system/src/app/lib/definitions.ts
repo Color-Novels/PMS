@@ -284,6 +284,37 @@ export type MedicalCertificate = {
     time: Date;
 };
 
+export type USSReferral = {
+    id: number;
+    patientId: number;
+    nameOfThePatient: string;
+    presentingComplaint: string;
+    duration: string;
+    onExamination: string;
+    pshx_pmhx: string;
+    ageOfThePatient: number;
+    reportDate: Date;
+    USS_type: string;
+    radiologist: string;
+    radiologist_title: string;
+    time: Date;
+};
+
+export type ReferralLetter = {
+    id: number;
+    patientId: number;
+    nameOfThePatient: string;
+    consultant_speciality: string;
+    consultant_name: string;
+    condition1: string;
+    condition2: string;
+    condition3: string;
+    investigations: string;
+    ageOfThePatient: number;
+    reportDate: Date;
+    time: Date;
+};
+
 //types of income for day
 
 export interface DailyIncome {
