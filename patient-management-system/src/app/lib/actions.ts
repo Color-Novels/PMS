@@ -12,11 +12,8 @@ import {
   StockData,
   StockQueryParams,
 } from "@/app/lib/definitions";
-import {prisma} from "./prisma";
-import { BatchStatus, DrugType} from "@prisma/client";
 import { prisma } from "./prisma";
-import { $Enums, BatchStatus, DrugType } from "@prisma/client";
-import MedicalCertificateStatus = $Enums.MedicalCertificateStatus;
+import { BatchStatus, DrugType } from "@prisma/client";
 
 export async function getTotalPages(query = "", filter = "name") {
   const whereClause = query

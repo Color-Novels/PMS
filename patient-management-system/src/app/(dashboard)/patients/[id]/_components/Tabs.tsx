@@ -66,7 +66,7 @@ const DoctorLinks = [
     {name: "History", value: "history", icon: Clock},
     {name: "Reports", value: "reports", icon: FileText},
     // {name: "Notes", value: "notes", icon: ClipboardEdit},
-    {name: "Medical Certificates", value: "medicalCertificates", icon: FileUser}
+    {name: "Documents", value: "documents", icon: FileUser}
 ]
 
 const NurseLinks = [
