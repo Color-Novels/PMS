@@ -18,13 +18,12 @@ interface CustomSelectProps {
 }
 
 const CustomGenderSelect: React.FC<CustomSelectProps> = ({
-                                                             value,
-                                                             onValueChange,
-                                                             placeholder = "Select an option",
-                                                             className = "",
-                                                         }) => {
+    value,
+    onValueChange,
+    placeholder = "Select an option",
+    className = "",
+}) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
-    const [selectedOption, setSelectedOption] = useState<Gender>(value);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
 
     const options: Option[] = [
@@ -52,12 +51,11 @@ const CustomGenderSelect: React.FC<CustomSelectProps> = ({
     }, []);
 
     const handleSelect = (option: Option) => {
-        setSelectedOption(option.value);
         onValueChange(option.value);
         setIsOpen(false);
     };
 
-    const selected = options.find((opt) => opt.value === selectedOption);
+    const selected = options.find((opt) => opt.value === value);
 
     return (
         <div className="relative w-full" ref={dropdownRef}>
@@ -89,14 +87,14 @@ const CustomGenderSelect: React.FC<CustomSelectProps> = ({
                                 key={option.value}
                                 onClick={() => handleSelect(option)}
                                 className={`relative flex w-full items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground ${
-                                    selectedOption === option.value ? "bg-accent" : ""
+                                    value === option.value ? "bg-accent" : ""
                                 }`}
                             >
                                 <div className="flex gap-2 items-center">
                                     {option.icon}
                                     <span>{option.label}</span>
                                 </div>
-                                {selectedOption === option.value && (
+                                {value === option.value && (
                                     <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
                     <Check className="h-4 w-4" />
                   </span>
