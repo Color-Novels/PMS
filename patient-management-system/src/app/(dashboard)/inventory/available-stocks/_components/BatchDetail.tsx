@@ -26,7 +26,7 @@ export default async function BatchDetail({ batchId }: { batchId: string }) {
                 <CardHeader className="p-6 border-b flex flex-col md:flex-row items-center justify-between">
                     <div className="flex items-center gap-3">
                         <AiOutlineMedicineBox className="size-10 text-blue-500" />
-                        <CardTitle className="text-3xl font-semibold">{batchData.drugName} - {batchData.unitConcetration}mg</CardTitle>
+                        <CardTitle className="text-3xl font-semibold">{batchData.drugName} - {batchData.unitConcentration}mg</CardTitle>
                     </div>
                     <CustomBadge
                         text={batchData.status}
