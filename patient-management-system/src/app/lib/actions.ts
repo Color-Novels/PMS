@@ -699,7 +699,7 @@ export async function getBatchData(batchId: number) {
             wholesalePrice: batchData.wholesalePrice,
             supplier: batchData.Supplier.name,
             status: batchData.status,
-            unitConcetration: batchData.unitConcentration.concentration,
+            unitConcentration: batchData.unitConcentration.concentration,
         };
     } catch (error) {
         console.error(error);
