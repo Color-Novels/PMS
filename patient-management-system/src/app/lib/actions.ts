@@ -523,136 +523,133 @@ export async function addNewItem({
                                  }: {
     formData: InventoryFormData;
 }): Promise<myError> {
+    // Validate required fields upfront
+    const requiredFields = [
+        'concentrationId',
+        'concentration',
+        'batchNumber',
+        'drugType',
+        'quantity',
+        'expiry',
+        'retailPrice',
+        'wholesalePrice',
+        'supplierName',
+        'Buffer',
+        'supplierContact'
+    ];
+
+    const missingField = requiredFields.find(field => !formData[field as keyof InventoryFormData]);
+    if (missingField) {
+        return { success: false, message: `Please fill all fields (missing: ${missingField})` };
+    }
+
+    // Since we've already validated that concentration exists, we can now assert it's not undefined
+    const concentration = formData.concentration!;
+
     try {
-        // Check all the required fields
-        if (
-            !formData.concentrationId ||
-            !formData.concentration ||
-            !formData.batchNumber ||
-            !formData.drugType ||
-            !formData.quantity ||
-            !formData.expiry ||
-            !formData.retailPrice ||
-            !formData.wholesalePrice ||
-            !formData.supplierName ||
-            !formData.Buffer ||
-            !formData.supplierContact
-        ) {
-            return {success: false, message: "Please fill all fields"};
-        }
-
         return await prisma.$transaction(async (tx) => {
-            // 1. Create or connect drug brand
-            const brand = await tx.drugBrand.upsert({
-                where: {id: formData.brandId ?? 0},
-                update: {},
-                create: {
-                    name: formData.brandName,
-                    description: formData.brandDescription || null,
-                },
-            });
+            // Parse numeric values once to avoid repeated parsing
+            const quantity = parseFloat(String(formData.quantity));
+            const retailPrice = parseFloat(String(formData.retailPrice));
+            const wholesalePrice = parseFloat(String(formData.wholesalePrice));
+            const expiryDate = new Date(formData.expiry);
+            const bufferAmount = Number(formData.Buffer);
 
-            // 2. Create or connect drug
-            const drug = await tx.drug.upsert({
-                where: {id: formData.drugId ?? 0},
-                update: {},
-                create: {
-                    name: formData.drugName,
-                },
-            });
-
-            // 3. Create or connect supplier
-            const supplier = await tx.supplier.upsert({
-                where: formData.supplierId
-                    ? {id: formData.supplierId}
-                    : {name: formData.supplierName},
-                update: {
-                    contact: formData.supplierContact, // Update contact info in case it changed
-                },
-                create: {
-                    name: formData.supplierName,
-                    contact: formData.supplierContact || "N/A",
-                },
-            });
-
-            // 4. Create batch with both drug and brand relationships
-            if (
-                formData.concentrationId === undefined ||
-                formData.concentration === undefined
-            ) {
-                return {success: false, message: "Please select a concentration"};
-            }
-
-            let newConcentrationId: number;
-
+            // 1. Handle concentration first to get the ID for later use
+            let concentrationId: number;
             if (formData.concentrationId === -1) {
                 const newConcentration = await tx.unitConcentration.upsert({
-                    where: {concentration: formData.concentration},
+                    where: { concentration },
                     update: {},
-                    create: {
-                        concentration: formData.concentration,
-                    },
+                    create: { concentration },
                 });
-                newConcentrationId = newConcentration.id;
+                concentrationId = newConcentration.id;
             } else {
-                newConcentrationId = formData.concentrationId;
+                // We know it's defined from validation, but need to tell TypeScript
+                concentrationId = formData.concentrationId!;
             }
 
-            await tx.batch.create({
-                data: {
-                    number: formData.batchNumber,
-                    drug: {
-                        connect: {id: drug.id},
+            // 2. Process related entities concurrently for better performance
+            const [brand, drug, supplier] = await Promise.all([
+                // Create or connect drug brand
+                tx.drugBrand.upsert({
+                    where: { id: formData.brandId ?? 0 },
+                    update: {},
+                    create: {
+                        name: formData.brandName!,
+                        description: formData.brandDescription || null,
                     },
-                    drugBrand: {
-                        connect: {id: brand.id},
-                    },
-                    type: formData.drugType as DrugType,
-                    fullAmount: parseFloat(formData.quantity.toString()),
-                    remainingQuantity: parseFloat(formData.quantity.toString()),
-                    expiry: new Date(formData.expiry),
-                    retailPrice: parseFloat(formData.retailPrice.toString()),
-                    wholesalePrice: parseFloat(formData.wholesalePrice.toString()),
-                    unitConcentration: {
-                        connect: {id: newConcentrationId},
-                    },
-                    Supplier: {
-                        connect: {id: supplier.id}, // Connect the batch to the supplier
-                    },
-                    status: "AVAILABLE",
-                },
-            });
+                }),
 
-            // 6. Create or update BufferLevel for the drug
-            await tx.bufferLevel.upsert({
-                where: {
-                    drugId_type_unitConcentrationId: {
+                // Create or connect drug
+                tx.drug.upsert({
+                    where: { id: formData.drugId ?? 0 },
+                    update: {},
+                    create: { name: formData.drugName! },
+                }),
+
+                // Create or connect supplier
+                tx.supplier.upsert({
+                    where: formData.supplierId
+                        ? { id: formData.supplierId }
+                        : { name: formData.supplierName! },
+                    update: { contact: formData.supplierContact! },
+                    create: {
+                        name: formData.supplierName!,
+                        contact: formData.supplierContact || "N/A",
+                    },
+                }),
+            ]);
+
+            // 3. Create batch and buffer level concurrently
+            await Promise.all([
+                // Create batch with relationships
+                tx.batch.create({
+                    data: {
+                        number: formData.batchNumber!,
+                        drug: { connect: { id: drug.id } },
+                        drugBrand: { connect: { id: brand.id } },
+                        type: formData.drugType as DrugType,
+                        fullAmount: quantity,
+                        remainingQuantity: quantity,
+                        expiry: expiryDate,
+                        retailPrice,
+                        wholesalePrice,
+                        unitConcentration: { connect: { id: concentrationId } },
+                        Supplier: { connect: { id: supplier.id } },
+                        status: "AVAILABLE",
+                    },
+                }),
+
+                // Create or update BufferLevel
+                tx.bufferLevel.upsert({
+                    where: {
+                        drugId_type_unitConcentrationId: {
+                            drugId: drug.id,
+                            type: formData.drugType as DrugType,
+                            unitConcentrationId: concentrationId,
+                        },
+                    },
+                    update: { bufferAmount },
+                    create: {
                         drugId: drug.id,
                         type: formData.drugType as DrugType,
-                        unitConcentrationId: newConcentrationId,
+                        unitConcentrationId: concentrationId,
+                        bufferAmount,
                     },
-                },
-                update: {
-                    bufferAmount: formData.Buffer, // Update buffer amount if it already exists
-                },
-                create: {
-                    drugId: drug.id,
-                    type: formData.drugType as DrugType,
-                    unitConcentrationId: newConcentrationId,
-                    bufferAmount: formData.Buffer, // Create new buffer level
-                },
-            });
+                }),
+            ]);
 
             revalidatePath("/inventory/available-stocks");
-            return {success: true, message: "Item added successfully"};
+            return { success: true, message: "Item added successfully" };
+        }, {
+            timeout: 10000, // 10 seconds transaction timeout
+            maxWait: 5000,  // 5 seconds max wait time for connection
+            isolationLevel: "ReadCommitted" // Appropriate isolation level for inventory operations
         });
     } catch (e) {
-        if (e instanceof Error) {
-            console.error(e.message);
-        } else {
-            console.error(e);
-        }
-        return {success: false, message: "Failed to add item"};
+        console.error("Add item error:", e instanceof Error ? e.message : e);
+        return { success: false, message: "Failed to add item" };
     }
 }
 
