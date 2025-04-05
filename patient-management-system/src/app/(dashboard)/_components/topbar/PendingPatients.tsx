@@ -50,7 +50,7 @@ const PendingPatients = ({session}: { session: SessionPayload }) => {
             cluster: 'ap2',
         });
 
-        const channel = pusher.subscribe('pending-patients');
+        const channel = pusher.subscribe('thoduwawa-medical-center');
 
         channel.bind('queue-updated', function (data: { prescribed: number, pending: number }) {
             setPending({prescribed: data.prescribed, pending: data.pending});
