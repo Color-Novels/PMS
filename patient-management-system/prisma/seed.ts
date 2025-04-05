@@ -559,8 +559,8 @@ async function main() {
     console.log("\nStarting database seeding...");
 
     // Create all data in sequence
-    await createUnitConcentrations();
     await createUsersAndPatients();
+    await createUnitConcentrations();
     await createDrugsAndBatches();
     await createReportTypes();
     await createCharges();

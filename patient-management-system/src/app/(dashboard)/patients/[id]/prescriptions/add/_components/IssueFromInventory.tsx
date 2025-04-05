@@ -522,7 +522,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                 details,
                 brandId: selectedBrand.id,
                 brandName: selectedBrand.name,
-                quantity: calculatedQuantity,
+                quantity: Number(calculatedQuantity.toFixed(2)),
                 drugName: selectedDrug.name,
                 drugId: selectedDrug.id,
                 concentration: selectedConcentration.concentration,
