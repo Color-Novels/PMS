@@ -138,15 +138,15 @@ export function BillExport({bill, trigger}: { bill: Bill | null; trigger: React.
         const finalTotal = subtotal + percentageTotal - discountTotal;
 
         // Items Table Header - Medications
-        yPos += 12;
+        yPos += 7;
         pdf.setFillColor(248, 250, 252);
         pdf.rect(margin, yPos, contentWidth, 7, 'F');
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(10);
-        pdf.text("Medications", margin + 2, yPos + 5);
+        pdf.text("Medications", margin , yPos + 5);
 
         // Medications list
-        yPos += 10;
+        yPos += 11;
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9);
         pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
@@ -154,26 +154,26 @@ export function BillExport({bill, trigger}: { bill: Bill | null; trigger: React.
         if (bill.entries.length > 0) {
             bill.entries.forEach((entry) => {
                 pdf.setFontSize(9);
-                pdf.text(`${entry.drugName} (${entry.brandName})`, margin + 2, yPos);
+                pdf.text(`${entry.drugName}`, margin + 2, yPos);
                 pdf.text(`${entry.quantity}`, pageWidth - margin - 30, yPos);
-                pdf.text(`${(entry.unitPrice * entry.quantity).toFixed(2)}`, pageWidth - margin - 10, yPos, {align: "right"});
-                yPos += 7;
+                pdf.text(`${(entry.unitPrice * entry.quantity).toFixed(2)}`, pageWidth - margin - 2, yPos, {align: "right"});
+                yPos += 5;
             });
         } else {
             pdf.text("No medications", margin + 2, yPos);
-            yPos += 7;
+            yPos += 5;
         }
 
         // Summary Section
-        yPos += 5;
+        yPos += 1;
         pdf.setDrawColor(colors.divider[0], colors.divider[1], colors.divider[2]);
         pdf.line(margin, yPos, pageWidth - margin, yPos);
         yPos += 7;
 
         pdf.setFontSize(10);
         pdf.setFont("helvetica", "bold");
-        pdf.text("Charges", margin + 2, yPos);
-        yPos += 7;
+        pdf.text("Charges", margin , yPos);
+        yPos += 6;
 
         // Medicine charge
         if (chargesByType["MEDICINE"]?.length > 0) {
@@ -181,7 +181,7 @@ export function BillExport({bill, trigger}: { bill: Bill | null; trigger: React.
             pdf.setFont("helvetica", "normal");
             pdf.setFontSize(9);
             pdf.text(`${charge.name || "Medicine Cost"}`, margin + 2, yPos);
-            pdf.text(`LKR ${charge.value.toFixed(2)}`, pageWidth - margin - 15, yPos, {align: "right"});
+            pdf.text(`LKR ${charge.value.toFixed(2)}`, pageWidth - margin - 2, yPos, {align: "right"});
             yPos += 5;
         }
 
@@ -190,7 +190,7 @@ export function BillExport({bill, trigger}: { bill: Bill | null; trigger: React.
             pdf.setTextColor(colors.purple[0], colors.purple[1], colors.purple[2]);
             chargesByType["PROCEDURE"].forEach(charge => {
                 pdf.text(`${charge.name}`, margin + 2, yPos);
-                pdf.text(`LKR ${charge.value.toFixed(2)}`, pageWidth - margin - 15, yPos, {align: "right"});
+                pdf.text(`LKR ${charge.value.toFixed(2)}`, pageWidth - margin - 2, yPos, {align: "right"});
                 yPos += 5;
             });
         }
@@ -200,7 +200,7 @@ export function BillExport({bill, trigger}: { bill: Bill | null; trigger: React.
             pdf.setTextColor(colors.blue[0], colors.blue[1], colors.blue[2]);
             chargesByType["FIXED"].forEach(charge => {
                 pdf.text(`${charge.name}`, margin + 2, yPos);
-                pdf.text(`LKR ${charge.value.toFixed(2)}`, pageWidth - margin - 15, yPos, {align: "right"});
+                pdf.text(`LKR ${charge.value.toFixed(2)}`, pageWidth - margin - 2, yPos, {align: "right"});
                 yPos += 5;
             });
         }
@@ -212,8 +212,8 @@ export function BillExport({bill, trigger}: { bill: Bill | null; trigger: React.
         yPos += 5;
         pdf.setFont("helvetica", "bold");
         pdf.text("Subtotal:", margin + 2, yPos);
-        pdf.text(`LKR ${subtotal.toFixed(2)}`, pageWidth - margin - 15, yPos, {align: "right"});
-        yPos += 7;
+        pdf.text(`LKR ${subtotal.toFixed(2)}`, pageWidth - margin - 2, yPos, {align: "right"});
+        yPos += 6;
 
         // Percentage charges
         if (percentageCharges.length > 0) {
@@ -221,7 +221,7 @@ export function BillExport({bill, trigger}: { bill: Bill | null; trigger: React.
             pdf.setTextColor(colors.green[0], colors.green[1], colors.green[2]);
             percentageCharges.forEach(charge => {
                 pdf.text(`${charge.name} (${charge.value}%)`, margin + 2, yPos);
-                pdf.text(`+ LKR ${charge.calculatedValue.toFixed(2)}`, pageWidth - margin - 15, yPos, {align: "right"});
+                pdf.text(`+ LKR ${charge.calculatedValue.toFixed(2)}`, pageWidth - margin - 2, yPos, {align: "right"});
                 yPos += 5;
             });
         }
@@ -231,7 +231,7 @@ export function BillExport({bill, trigger}: { bill: Bill | null; trigger: React.
             pdf.setTextColor(colors.discount[0], colors.discount[1], colors.discount[2]);
             discountCharges.forEach(charge => {
                 pdf.text(`${charge.name} (${charge.value}%)`, margin + 2, yPos);
-                pdf.text(`- LKR ${charge.calculatedValue.toFixed(2)}`, pageWidth - margin - 15, yPos, {align: "right"});
+                pdf.text(`- LKR ${charge.calculatedValue.toFixed(2)}`, pageWidth - margin - 2, yPos, {align: "right"});
                 yPos += 5;
             });
         }
@@ -246,7 +246,7 @@ export function BillExport({bill, trigger}: { bill: Bill | null; trigger: React.
         pdf.setFontSize(12);
         pdf.setTextColor(colors.accent[0], colors.accent[1], colors.accent[2]);
         pdf.text("Total:", margin + 2, yPos);
-        pdf.text(`LKR ${finalTotal.toFixed(2)}`, pageWidth - margin - 15, yPos, {align: "right"});
+        pdf.text(`LKR ${finalTotal.toFixed(2)}`, pageWidth - margin - 2, yPos, {align: "right"});
 
         // Footer
         yPos = pdf.internal.pageSize.height - 20;
