@@ -382,5 +382,5 @@ export async function triggerQueueUpdate() {
         {prescribed: 0, pending: 0}
     );
     // Trigger a Pusher event with the new counts
-    await pusher.trigger(`pending-patients`, 'queue-updated', countData);
+    await pusher.trigger(`thoduwawa-medical-center`, 'queue-updated', countData);
 }
