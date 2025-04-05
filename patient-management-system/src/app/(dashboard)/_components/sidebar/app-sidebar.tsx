@@ -20,7 +20,7 @@ export async function AppSidebar() {
                     </div>
                     <div>
                         <h2 className="text-xl font-bold">MediPanel</h2>
-                        <p className="text-sm">Healthcare Management</p>
+                        <p className="text-sm">Thoduwawa Medical Center</p>
                     </div>
                 </Link>
             </SidebarHeader>

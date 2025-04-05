@@ -118,7 +118,6 @@ const PrescriptionList = async ({currentPage, query, patientID, perPage, filter}
                                 {prescription.Charges.length > 0 && (
                                     <div className="flex items-center flex-wrap gap-2">
                                         <span className="text-sm">Charges:</span>
-                                        <CustomBadge text={'Medicines'} color={feeTypes['MEDICINE'].color}/>
                                         {prescription.Charges.filter((charge) => charge.type !== 'PROCEDURE').map((charge) => (
                                             <CustomBadge
                                                 key={charge.id}

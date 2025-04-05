@@ -159,6 +159,7 @@ export default function AddPatientForm({text}: { text?: string }) {
             weight: "",
             gender: "",
         });
+        setOpen(false);
     };
 
     return (
