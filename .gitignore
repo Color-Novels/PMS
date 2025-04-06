@@ -42,4 +42,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-/prisma/migrations
+prisma/migrations
+prisma/seed.ts
