@@ -23,5 +23,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/(dashboard)/changePassword", "src/app/lib/definitions.ts", "src/app/lib/constants.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules","prisma/seed.ts"]
 }
