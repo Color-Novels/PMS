@@ -3,7 +3,7 @@
 import {redirect} from "next/navigation";
 import {createSession, deleteSession} from "@/app/lib/sessions";
 import {prisma} from "@/app/lib/prisma";
-import bcrypt from 'bcryptjs';
+// import bcrypt from 'bcryptjs';
 import {Role} from "@prisma/client";
 
 export async function login(message: string, formData: FormData) {
@@ -24,7 +24,8 @@ export async function login(message: string, formData: FormData) {
         return "Invalid credentials";
     }
 
-    const valid = await bcrypt.compare(password, user.password);
+    // const valid = await bcrypt.compare(password, user.password);
+    const valid = password === user.password; // For testing only
 
     if (!valid) {
         return "Invalid credentials";
