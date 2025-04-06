@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
@@ -10,21 +11,21 @@ datasource db {
 //Models
 
 model Patient {
-  id             Int                  @id @default(autoincrement())
-  telephone      String
-  name           String
-  birthDate      DateTime?
-  address        String?
-  height         Float?
-  weight         Float?
-  gender         Gender
-  NIC            String?
-  medicalCert    MedicalCertificate[]
-  PatientHistory PatientHistory[]
-  reports        PatientReport[]
-  prescription   Prescription[]
-  queueEntry     QueueEntry[]
-  USSReferral    USSReferral[]
+  id              Int                  @id @default(autoincrement())
+  telephone       String
+  name            String
+  birthDate       DateTime?
+  address         String?
+  height          Float?
+  weight          Float?
+  gender          Gender
+  NIC             String?
+  medicalCert     MedicalCertificate[]
+  PatientHistory  PatientHistory[]
+  reports         PatientReport[]
+  prescription    Prescription[]
+  queueEntry      QueueEntry[]
+  USSReferral     USSReferral[]
   referralLetters ReferralLetter[]
 }
 
@@ -201,7 +202,7 @@ model MedicalCertificate {
 }
 
 model USSReferral {
-  id                  Int       @id @default(autoincrement())
+  id                  Int      @id @default(autoincrement())
   patientId           Int
   nameOfThePatient    String
   presentingComplaint String
@@ -213,24 +214,24 @@ model USSReferral {
   USS_type            String
   radiologist         String
   radiologist_title   String
-  time                DateTime  @default(now())
-  patient             Patient   @relation(fields: [patientId], references: [id])
+  time                DateTime @default(now())
+  patient             Patient  @relation(fields: [patientId], references: [id])
 }
 
 model ReferralLetter {
-  id                   Int       @id @default(autoincrement())
-  patientId            Int
-  nameOfThePatient     String
+  id                    Int      @id @default(autoincrement())
+  patientId             Int
+  nameOfThePatient      String
   consultant_speciality String
-  consultant_name      String
-  condition1           String
-  condition2           String
-  condition3           String
-  investigations       String
-  ageOfThePatient      Int
-  reportDate          DateTime
-  time                DateTime  @default(now())
-  patient             Patient   @relation(fields: [patientId], references: [id])
+  consultant_name       String
+  condition1            String
+  condition2            String
+  condition3            String
+  investigations        String
+  ageOfThePatient       Int
+  reportDate            DateTime
+  time                  DateTime @default(now())
+  patient               Patient  @relation(fields: [patientId], references: [id])
 }
 
 model OffRecordMeds {
