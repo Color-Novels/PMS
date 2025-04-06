@@ -1,0 +1,24 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --cache .npm --prefer-offline
+    build:
+      commands:
+        - env | grep -e PUSHER_APP_CLUSTER >> .env
+        - env | grep -e PUSHER_APP_KEY >> .env
+        - env | grep -e PUSHER_APP_SECRET >> .env
+        - env | grep -e PUSHER_APP_ID >> .env
+        - env | grep -e JWT_SECRET >> .env
+        - env | grep -e DATABASE_URL >> .env
+        - env | grep -e DIRECT_URL >> .env
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - .next/cache/**/*
+      - .npm/**/*
