@@ -5,14 +5,14 @@ import {myError} from "@/app/lib/definitions";
 import {validateEmail, validateMobile} from "@/app/lib/utils";
 import {verifySession} from "@/app/lib/sessions";
 import {Role} from "@prisma/client";
-import bcrypt from "bcryptjs";
+// import bcrypt from "bcryptjs";
 import {prisma} from "@/app/lib/prisma";
 import {revalidatePath} from "next/cache";
 import {ChangePasswordFormData} from "@/app/(dashboard)/admin/_components/ChangePasswordDialog";
 import {EditUserProfileFormData} from "@/app/(dashboard)/admin/_components/EditProfileDialog";
 
 export async function changePassword({
-                                         currentPassword,
+                                         // currentPassword,
                                          newPassword,
                                          confirmPassword,
                                          userID,
@@ -38,12 +38,16 @@ export async function changePassword({
             // Check if the doctor is changing their own password
             if (session.id === userID) {
                 // Doctor changing own password, requires currentPassword
-                if (!bcrypt.compareSync(currentPassword, user.password)) {
-                    return {
-                        success: false,
-                        message: "Current password is incorrect",
-                    };
-                }
+                // if (!bcrypt.compareSync(currentPassword, user.password)) {
+                //     return {
+                //         success: false,
+                //         message: "Current password is incorrect",
+                //     };
+                // }
+                return {
+                    success: false,
+                    message: "Current password is incorrect",
+                };
             }
         } else {
             // Non-doctors can only change their own password and must provide current password
@@ -54,16 +58,22 @@ export async function changePassword({
                         "You do not have permission to change this user's password",
                 };
             }
-            if (!bcrypt.compareSync(currentPassword, user.password)) {
-                return {
-                    success: false,
-                    message: "Current password is incorrect",
-                };
-            }
+            // if (!bcrypt.compareSync(currentPassword, user.password)) {
+            //     return {
+            //         success: false,
+            //         message: "Current password is incorrect",
+            //     };
+            // }
+            return {
+                success: false,
+                message: "Current password is incorrect",
+            };
         }
 
         // Hash and update password
-        const hashedPassword = bcrypt.hashSync(newPassword, 10);
+        // const hashedPassword = bcrypt.hashSync(newPassword, 10);
+
+        const hashedPassword = 'bbbb';
 
         await prisma.user.update({
             where: {id: userID},
@@ -245,7 +255,8 @@ export async function addUser({
             };
         }
 
-        const hashedPassword = bcrypt.hashSync(formData.password, 10);
+        // const hashedPassword = bcrypt.hashSync(formData.password, 10);
+        const hashedPassword = 'aaaa';
 
         await prisma.user.create({
             data: {
