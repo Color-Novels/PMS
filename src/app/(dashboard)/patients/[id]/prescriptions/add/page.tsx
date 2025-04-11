@@ -1,19 +1,22 @@
 import React from 'react';
 import PrescriptionForm from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/PrescriptionForm";
-import SidebarHistoryList, { SidebarHistoryListSkeleton } from '@/app/(dashboard)/patients/[id]/prescriptions/add/_components/CompactSidebarHistoryList';
+import SidebarHistoryList, {
+    SidebarHistoryListSkeleton
+} from '@/app/(dashboard)/patients/[id]/prescriptions/add/_components/CompactSidebarHistoryList';
 import {Metadata} from "next";
 import {getPatientSpecificVitals} from "@/app/lib/actions/prescriptions";
 import {Suspense} from 'react';
 import {Card, CardContent, CardHeader} from "@/components/ui/card";
 import AddHistoryForm from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/CompactAddHistory";
 import SearchDropdown from "@/app/(dashboard)/_components/Dropdown";
+import {ScrollArea} from "@/components/ui/scroll-area";
 
 export const metadata: Metadata = {
     title: "PMS - Add Prescription",
     description: "Add patient prescription",
 };
 
-const Page = async ({ params, searchParams }: {
+const Page = async ({params, searchParams}: {
     searchParams?: Promise<{ filter?: string; }>,
     params: Promise<{ id: string }>;
 }) => {
@@ -31,7 +34,7 @@ const Page = async ({ params, searchParams }: {
                 <PrescriptionForm patientID={patientID} vitals={vitals}/>
             </div>
 
-            <Card className="sticky top-0 h-fit">
+            <Card className="flex flex-col sticky top-0 h-[calc(100vh-5.5rem)]">
                 <CardHeader className="pb-2">
                     <div className="flex flex-row justify-center gap-2 items-center text-center">
                         <SearchDropdown
@@ -47,10 +50,12 @@ const Page = async ({ params, searchParams }: {
                         <AddHistoryForm patientID={patientID}/>
                     </div>
                 </CardHeader>
-                <CardContent className="p-3 overflow-y-auto max-h-[calc(100vh-160px)]">
-                    <Suspense fallback={<SidebarHistoryListSkeleton/>}>
-                        <SidebarHistoryList patientID={patientID} filter={filter}/>
-                    </Suspense>
+                <CardContent className="p-3 h-full overflow-hidden">
+                    <ScrollArea className={'h-full'}>
+                        <Suspense fallback={<SidebarHistoryListSkeleton/>}>
+                            <SidebarHistoryList patientID={patientID} filter={filter}/>
+                        </Suspense>
+                    </ScrollArea>
                 </CardContent>
             </Card>
         </div>

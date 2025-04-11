@@ -59,15 +59,15 @@ const SidebarHistoryList = async ({
 
     if (history.length === 0) {
         return (
-            <div className={"flex flex-col items-center justify-center h-full"}>
+            <div className={"flex flex-col items-center justify-center h-full pt-8"}>
                 <Slice className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No recent history</p>
+                <p className="text-sm text-gray-500">No history records</p>
             </div>
         );
     }
 
     return (
-        <>
+        <div className={'flex flex-col h-full'}>
             <h3 className="text-md font-semibold px-2">Recent History</h3>
             {history.map((item) => {
                 const { icon, color } = getHistoryTypeDetails(item.type);
@@ -91,7 +91,7 @@ const SidebarHistoryList = async ({
                     </Link>
                 );
             })}
-        </>
+        </div>
     );
 };
 

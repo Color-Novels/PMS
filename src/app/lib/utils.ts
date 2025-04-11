@@ -274,17 +274,17 @@ export const compareChargeTypes = (typeA: ChargeType, typeB: ChargeType) => {
     return orderA - orderB;
 };
 
-const histyTypeOrder: Record<PatientHistoryType, number> = {
-    'ALLERGY': 0,
-    'MEDICAL': 1,
-    'SURGICAL': 2,
-    'FAMILY': 3,
-    'SOCIAL': 4,
+const historyTypeOrder: Record<PatientHistoryType, number> = {
+    'ALLERGY': 5,
+    'MEDICAL': 4,
+    'SURGICAL': 3,
+    'FAMILY': 2,
+    'SOCIAL': 1,
 };
 
 export const compareHistoryTypes = (typeA: PatientHistoryType, typeB: PatientHistoryType) => {
-    const orderA = histyTypeOrder[typeA] || 999;
-    const orderB = histyTypeOrder[typeB] || 999;
+    const orderA = historyTypeOrder[typeA] || 999;
+    const orderB = historyTypeOrder[typeB] || 999;
     return orderA - orderB;
 };
 
