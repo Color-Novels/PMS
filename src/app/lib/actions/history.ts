@@ -9,61 +9,6 @@ import { myError } from "@/app/lib/definitions";
 import { revalidatePath } from "next/cache";
 import { compareHistoryTypes } from "../utils";
 
-export async function getHistory({
-    filter = "all",
-    query = "",
-    patientID,
-}: {
-    filter?: string;
-    query?: string;
-    patientID: number;
-}) {
-    const session = await verifySession();
-
-    if (session.role !== "DOCTOR") redirect("/unauthorized");
-    if (!patientID) throw new Error("No patient ID");
-
-    const baseSearchCriteria: Prisma.PatientHistoryWhereInput = {
-        OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { description: { contains: query, mode: "insensitive" } },
-        ],
-    };
-
-    let typeFilter: object;
-
-    switch (filter) {
-        case "medical":
-            typeFilter = { type: "MEDICAL" };
-            break;
-        case "social":
-            typeFilter = { type: "SOCIAL" };
-            break;
-        case "family":
-            typeFilter = { type: "FAMILY" };
-            break;
-        case "allergy":
-            typeFilter = { type: "ALLERGY" };
-            break;
-        case "all":
-        default:
-            typeFilter = {};
-            break;
-    }
-
-    const findManyOptions: Prisma.PatientHistoryFindManyArgs = {
-        where: {
-            patientId: patientID,
-            ...typeFilter,
-            ...baseSearchCriteria,
-        },
-        orderBy: {
-            time: "desc",
-        },
-    };
-    return await prisma.patientHistory.findMany(findManyOptions);
-}
-
 export async function getHistorySidebar({
     filter = "all",
     patientID,
