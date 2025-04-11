@@ -16,11 +16,20 @@ import {getAllHistory} from "@/app/lib/actions/history";
 interface HistoryFiltersProps {
     history: Awaited<ReturnType<typeof getAllHistory>>;
     onFilterChange: (filteredHistory: Awaited<ReturnType<typeof getAllHistory>>) => void;
+    query?: string;
 }
 
-const HistoryFilters: React.FC<HistoryFiltersProps> = ({history, onFilterChange}) => {
-    const [searchTerm, setSearchTerm] = useState('');
+const HistoryFilters: React.FC<HistoryFiltersProps> = ({history, onFilterChange, query}) => {
+    // Initialize searchTerm with query if it exists
+    const [searchTerm, setSearchTerm] = useState(query || '');
     const [selectedType, setSelectedType] = useState<string>('');
+
+    // Update searchTerm when query prop changes
+    useEffect(() => {
+        if (query) {
+            setSearchTerm(query);
+        }
+    }, [query]);
 
     // Get unique types from history
     const historyTypes = ['ALL', ...Array.from(new Set(history.map(item => item.type)))];
@@ -45,7 +54,7 @@ const HistoryFilters: React.FC<HistoryFiltersProps> = ({history, onFilterChange}
         }
 
         return filteredResults;
-    }, [searchTerm, selectedType, history]);
+    }, [history, searchTerm, selectedType]);
 
     // Apply filters when dependencies change
     useEffect(() => {
@@ -64,10 +73,11 @@ const HistoryFilters: React.FC<HistoryFiltersProps> = ({history, onFilterChange}
                         className="h-full peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
                         placeholder="Search by name or description..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                        }}
                     />
                 </div>
-
 
                 {/* Type Filter */}
                 <Select

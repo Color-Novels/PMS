@@ -9,7 +9,6 @@ import {Suspense} from 'react';
 import {Card, CardContent, CardHeader} from "@/components/ui/card";
 import AddHistoryForm from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/CompactAddHistory";
 import SearchDropdown from "@/app/(dashboard)/_components/Dropdown";
-import {ScrollArea} from "@/components/ui/scroll-area";
 
 export const metadata: Metadata = {
     title: "PMS - Add Prescription",
@@ -51,11 +50,9 @@ const Page = async ({params, searchParams}: {
                     </div>
                 </CardHeader>
                 <CardContent className="p-3 h-full overflow-hidden">
-                    <ScrollArea className={'h-full'}>
-                        <Suspense fallback={<SidebarHistoryListSkeleton/>}>
-                            <SidebarHistoryList patientID={patientID} filter={filter}/>
-                        </Suspense>
-                    </ScrollArea>
+                    <Suspense fallback={<SidebarHistoryListSkeleton/>}>
+                        <SidebarHistoryList patientID={patientID} filter={filter}/>
+                    </Suspense>
                 </CardContent>
             </Card>
         </div>
