@@ -64,9 +64,10 @@ const getHistoryTypeDetails = (type: string): {
 
 interface HistoryListProps {
     initialHistory: Awaited<ReturnType<typeof getAllHistory>>;
+    query: string;
 }
 
-const HistoryList = ({ initialHistory }: HistoryListProps) => {
+const HistoryList = ({ initialHistory, query }: HistoryListProps) => {
     const [filteredHistory, setFilteredHistory] = useState(initialHistory);
 
     // Use useCallback to memoize the filter change handler
@@ -89,6 +90,7 @@ const HistoryList = ({ initialHistory }: HistoryListProps) => {
             <HistoryFilters
                 history={initialHistory}
                 onFilterChange={handleFilterChange}
+                query={query}
             />
 
             {filteredHistory.length === 0 ? (
