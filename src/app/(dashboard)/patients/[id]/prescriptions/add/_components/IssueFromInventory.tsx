@@ -95,6 +95,13 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
 
 
     const handleDoseChange = (value: string) => {
+        // Check for empty input first
+        if (value === "") {
+            setDose(null);
+            return;
+        }
+
+        // Then handle numeric input
         const numValue = parseFloat(value);
         if (!isNaN(numValue) && numValue >= 0) {
             setDose(numValue);
@@ -102,13 +109,27 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
     };
 
     const handleForDaysChange = (value: string) => {
-        const numValue = parseInt(value);
+        // Check for empty input first
+        if (value === "") {
+            setForDays(null);
+            return;
+        }
+
+        // Then handle numeric input
+        const numValue = parseFloat(value);
         if (!isNaN(numValue) && numValue >= 0) {
             setForDays(numValue);
         }
     };
 
     const handleTimesChange = (value: string) => {
+        // Check for empty input first
+        if (value === "") {
+            setTimes(null);
+            return;
+        }
+
+        // Then handle numeric input
         const numValue = parseInt(value);
         if (!isNaN(numValue) && numValue >= 0) {
             setTimes(numValue);
