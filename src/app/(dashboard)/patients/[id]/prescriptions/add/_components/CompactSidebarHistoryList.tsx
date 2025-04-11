@@ -6,7 +6,7 @@ import {
     Stethoscope,
     HeartPulse,
     Users,
-    AlertCircle,
+    AlertCircle, Info,
 } from "lucide-react";
 import {CardContent} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
@@ -79,18 +79,23 @@ const SidebarHistoryList = async ({
                     <Link
                         href={`/patients/${patientID}/history?query=${item.name}`}
                         key={item.id}
-                        className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-md"
+                        className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 rounded-md"
                     >
                         <div className={`rounded-full p-1 ${color} text-white`}>
                             {icon}
                         </div>
-                        <div className="flex-grow overflow-hidden">
-                            <p className="text-sm font-medium truncate">
-                                {item.name}
-                            </p>
+                        <div className="flex flex-col w-full">
+                            <div className={'max-w-40'}>
+                                <p className="text-sm font-medium truncate">
+                                    {item.name}
+                                </p>
+                            </div>
                             <p className="text-sm text-gray-500 truncate">
                                 {format(new Date(item.time), "MMM d, h:mm a")}
                             </p>
+                        </div>
+                        <div>
+                            {item.description ? <Info size={18} className={'text-blue-600'}/> : null}
                         </div>
                     </Link>
                 );
