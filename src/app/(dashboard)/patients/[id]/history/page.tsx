@@ -9,10 +9,12 @@ export const metadata: Metadata = {
     description: "Patient Management System - Patient History",
 };
 
-const Page = async ({params}: {
+const Page = async ({params, searchParams}: {
     params: Promise<{ id: string }>
+    searchParams: Promise<{ query: string; }>
 }) => {
     const id = Number((await params).id);
+    const query = (await searchParams).query || '';
     const histories = await getAllHistory({patientID: id});
     const count = histories.length
 
@@ -23,7 +25,7 @@ const Page = async ({params}: {
                 <AddHistoryForm patientID={id}/>
             </div>
             <div className="flex-grow w-full">
-                <HistoryList initialHistory={histories}/>
+                <HistoryList initialHistory={histories} query={query} />
             </div>
         </div>
     );
