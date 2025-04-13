@@ -31,12 +31,11 @@ export function DrugConfirmationDialog({
   const [confirmEnabled, setConfirmEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Enable confirm button after 100ms
   useEffect(() => {
     if (open) {
       const timer = setTimeout(() => {
         setConfirmEnabled(true);
-      }, 1000);
+      }, 5000);
       return () => clearTimeout(timer);
     } else {
       setConfirmEnabled(false);
@@ -59,7 +58,6 @@ export function DrugConfirmationDialog({
     }
   };
 
-  // Get readable drug type name
   const getReadableDrugType = (type: DrugType) => {
     return type
       .replace("_", " ")
