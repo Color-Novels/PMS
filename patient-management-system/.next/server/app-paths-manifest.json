@@ -1,4 +1,0 @@
-{
-  "/(dashboard)/inventory/buffer-level/page": "app/(dashboard)/inventory/buffer-level/page.js",
-  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js"
-}
