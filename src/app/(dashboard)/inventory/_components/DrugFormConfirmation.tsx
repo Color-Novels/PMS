@@ -80,7 +80,7 @@ export function DrugConfirmationDialog({
           <Alert className="bg-amber-50 border-amber-200">
             <AlertDescription className="text-amber-700">
               Please verify all details below before adding this drug to
-              inventory
+              inventory. <span className="font-semibold text-red-700">This action cannot be undone.</span>
             </AlertDescription>
           </Alert>
 
