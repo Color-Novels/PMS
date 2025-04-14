@@ -54,6 +54,7 @@ export function DrugConfirmationDialog({
     try {
       return format(new Date(dateString), "MMM dd, yyyy");
     } catch (e) {
+      console.error(e);
       return dateString;
     }
   };
