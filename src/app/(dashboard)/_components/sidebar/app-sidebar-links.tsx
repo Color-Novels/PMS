@@ -16,7 +16,17 @@ import {
     SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
-import {Clock, LayoutDashboard, Package, Shield, Users, UserPen, ChevronRight, CircleDollarSign} from "lucide-react"
+import {
+    Clock,
+    LayoutDashboard,
+    Package,
+    Shield,
+    Users,
+    UserPen,
+    ChevronRight,
+    CircleDollarSign,
+    Info
+} from "lucide-react"
 import {Role} from '@prisma/client';
 import {SidebarItem} from "@/app/lib/definitions";
 import {usePathname} from "next/navigation";
@@ -127,6 +137,20 @@ export const DoctorLinks: SidebarItem[] = [
             }
         ],
     },
+    {
+        type: "expandable",
+        title: "About",
+        icon: Info,
+        initiallyExpanded: false,
+        items: [
+            {
+                type: 'link',
+                title: "Changelog",
+                url: "/changelog",
+                isActive: false,
+            }
+        ]
+    }
 ];
 
 export const NurseLinks: SidebarItem[] = [
@@ -198,6 +222,20 @@ export const NurseLinks: SidebarItem[] = [
             },
         ],
     },
+    {
+        type: "expandable",
+        title: "About",
+        icon: Info,
+        initiallyExpanded: false,
+        items: [
+            {
+                type: 'link',
+                title: "Changelog",
+                url: "/changelog",
+                isActive: false,
+            }
+        ]
+    }
 ];
 
 const AppSidebarLinks = ({role}: { role: Role }) => {
