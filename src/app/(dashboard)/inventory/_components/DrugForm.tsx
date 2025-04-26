@@ -41,7 +41,8 @@ export function DrugForm() {
     drugName: "",
     batchNumber: "",
     drugType: DrugType.TABLET,
-    quantity: "",
+    packSize: "",
+    quantity: "1",
     expiry: "",
     retailPrice: "",
     wholesalePrice: "",
@@ -351,7 +352,8 @@ export function DrugForm() {
           drugName: "",
           batchNumber: "",
           drugType: DrugType.TABLET,
-          quantity: "",
+          packSize: "",
+          quantity: "1",
           expiry: "",
           wholesalePrice: "",
           retailPrice: "",
@@ -512,10 +514,28 @@ export function DrugForm() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label
+                  htmlFor="packSize"
+                  className="block text-sm font-medium mb-1"
+                >
+                  PackSize
+                </label>
+                <Input
+                  id="packSize"
+                  type="number"
+                  value={formData.packSize}
+                  onChange={handleChange}
+                  required
+                  name="packSize"
+                  min="0"
+                  className={"h-8"}
+                />
+              </div>
+              <div>
+                <label
                   htmlFor="quantity"
                   className="block text-sm font-medium mb-1"
                 >
-                  Quantity(in units)
+                  Quantity
                 </label>
                 <Input
                   id="quantity"
@@ -524,7 +544,7 @@ export function DrugForm() {
                   onChange={handleChange}
                   required
                   name="quantity"
-                  min="0"
+                  min="1"
                   className={"h-8"}
                 />
               </div>
@@ -533,7 +553,7 @@ export function DrugForm() {
                   htmlFor="wholesalePrice"
                   className="block text-sm font-medium mb-1"
                 >
-                  Wholesale Price(per unit)
+                  Wholesale Price (Rate)
                 </label>
                 <Input
                   id="wholesalePrice"
@@ -553,7 +573,7 @@ export function DrugForm() {
                   htmlFor="retailPrice"
                   className="block text-sm font-medium mb-1"
                 >
-                  Retail Price(per unit)
+                  Retail Price
                 </label>
                 <Input
                   id="retailPrice"
@@ -587,8 +607,7 @@ export function DrugForm() {
                   className={"h-8"}
                 />
               </div>
-            </div>
-            <div>
+              <div>
               <label
                 htmlFor="expiry"
                 className="block text-sm font-medium mb-1"
@@ -605,6 +624,7 @@ export function DrugForm() {
                 className={"h-8"}
               />
             </div>
+            </div>
             <Button
               type="submit"
               className="w-full bg-primary-500 hover:bg-primary-600"
@@ -614,7 +634,6 @@ export function DrugForm() {
           </form>
         </DialogContent>
       </Dialog>
-
       {/* Confirmation Dialog */}
       <DrugConfirmationDialog
         open={showConfirmation}

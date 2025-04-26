@@ -69,6 +69,7 @@ export type InventoryFormData = {
     brandDescription?: string;
     batchNumber: string;
     drugType: DrugType;
+    packSize: number | string;
     quantity: number | string;
     expiry: string;
     retailPrice: number | string;

@@ -530,6 +530,7 @@ export async function addNewItem({
         'batchNumber',
         'drugType',
         'quantity',
+        'packSize',
         'expiry',
         'retailPrice',
         'wholesalePrice',
@@ -549,9 +550,9 @@ export async function addNewItem({
     try {
         return await prisma.$transaction(async (tx) => {
             // Parse numeric values once to avoid repeated parsing
-            const quantity = parseFloat(String(formData.quantity));
-            const retailPrice = parseFloat(String(formData.retailPrice));
-            const wholesalePrice = parseFloat(String(formData.wholesalePrice));
+            const quantity = parseFloat(String(Number(formData.packSize)* Number(formData.quantity)));
+            const retailPrice = parseFloat(String(Number(formData.retailPrice) / Number(formData.packSize)));
+            const wholesalePrice = parseFloat(String(Number(formData.wholesalePrice) / Number(formData.packSize)));
             const expiryDate = new Date(formData.expiry);
             const bufferAmount = Number(formData.Buffer);
 
