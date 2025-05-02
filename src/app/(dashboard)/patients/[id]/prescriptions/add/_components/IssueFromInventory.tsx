@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {useDebouncedCallback} from "use-debounce";
@@ -18,7 +18,7 @@ import {IssuingStrategy, MEAL} from "@prisma/client";
 import type {DrugType} from "@prisma/client";
 import type {IssueInForm} from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/PrescriptionForm";
 import {calculateForDays, calculateQuantity, calculateTimes} from "@/app/lib/utils";
-import {CircleAlert, ClipboardCheck, Plus, TriangleAlert, Utensils} from "lucide-react";
+import {CircleAlert, ClipboardCheck, Pencil, Plus, TriangleAlert, Utensils} from "lucide-react";
 import {Textarea} from "@/components/ui/textarea";
 import {differenceInDays} from "date-fns";
 import ConcentrationComboBox from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/ConcentrationComboBox";
@@ -31,6 +31,9 @@ import {Id, toast} from "react-toastify";
 
 interface IssuesListProps {
     onAddIssue: (issue: IssueInForm) => void;
+    onUpdateIssue?: (issue: IssueInForm, originalIssue: IssueInForm) => void;
+    issueToEdit?: IssueInForm | null;
+    isEditMode?: boolean;
 }
 
 export type DrugOption = {
@@ -61,7 +64,12 @@ export interface BrandOption {
 
 type CachedStrategy = Awaited<ReturnType<typeof getCachedStrategy>>
 
-const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
+const IssueFromInventory: React.FC<IssuesListProps> = ({
+                                                           onAddIssue,
+                                                           onUpdateIssue,
+                                                           issueToEdit = null,
+                                                           isEditMode = false
+                                                       }) => {
     const [open, setOpen] = useState(false);
     const [isDrugSearching, setIsDrugSearching] = useState(false);
     const [isBrandSearching, setIsBrandSearching] = useState(false);
@@ -96,6 +104,96 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
     const [isTopical, setIsTopical] = useState<boolean>(false);
     const [directQuantity, setDirectQuantity] = useState<number | null>(null);
 
+
+    // Function to load existing issue data
+    const loadIssueForEditing = async (issue: IssueInForm) => {
+        try {
+            // Create toast to track progress
+            const toastId = toast.loading("Loading issue data...", {
+                position: "bottom-right",
+                pauseOnFocusLoss: false,
+                closeButton: true,
+            });
+
+            setSelectedDrug({id: issue.drugId, name: issue.drugName});
+            setIsTopical(issue.dose === null);
+            setStrategy(issue.strategy);
+            setMealTiming(issue.meal);
+            setDetails(issue.details || "");
+
+            // Set appropriate values based on medication type
+            if (issue.dose === null) {
+                // Topical medication
+                setDirectQuantity(issue.quantity);
+            } else {
+                // Standard medication
+                setDose(issue.dose);
+
+                if (issue.strategy === IssuingStrategy.OTHER ||
+                    issue.strategy === IssuingStrategy.SOS ||
+                    issue.strategy === IssuingStrategy.WEEKLY) {
+                    setTimes(issue.forTimes);
+                } else {
+                    setForDays(issue.forDays);
+                }
+            }
+
+            // Load drug type
+            const types = await getDrugTypesByDrug(issue.drugId);
+            setTypes(types);
+            const matchingType = types.find(t => t.type === issue.drugType) || null;
+            setSelectedType(matchingType);
+
+            // Load concentrations
+            const concentrations = await getConcentrationByDrug({
+                drugID: issue.drugId,
+                type: issue.drugType,
+            });
+            setConcentrations(concentrations);
+            const matchingConcentration = concentrations.find(c => c.id === issue.concentrationID) || null;
+            setSelectedConcentration(matchingConcentration);
+
+            // Load brands
+            if (matchingConcentration) {
+                const brands = await getBrandByDrugConcentrationType({
+                    drugID: issue.drugId,
+                    concentrationID: issue.concentrationID,
+                    type: issue.drugType,
+                });
+                setBrands(brands);
+                const matchingBrand = brands.find(b => b.id === issue.brandId) || null;
+                setSelectedBrand(matchingBrand);
+
+                if (matchingBrand) {
+                    showWarnings(matchingBrand);
+                }
+            }
+
+            toast.update(toastId, {
+                render: "Issue loaded for editing",
+                type: "success",
+                isLoading: false,
+                autoClose: 1500,
+            });
+        } catch (error) {
+            console.error("Error loading issue data:", error);
+            setError("Failed to load issue data for editing");
+            toast.error("Failed to load issue data");
+        } finally {
+            setCacheFetching(false);
+            setIsDrugSearching(false);
+            setIsConcentrationSearching(false);
+            setIsBrandSearching(false);
+            setIsTypeSearching(false);
+        }
+    };
+
+    // Effect to load data when editing an existing issue
+    useEffect(() => {
+        if (issueToEdit && isEditMode && open) {
+            loadIssueForEditing(issueToEdit).then();
+        }
+    }, [issueToEdit, isEditMode, open]);
 
     const handleDoseChange = (value: string) => {
         // Check for empty input first
@@ -568,7 +666,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                     strategy,
                     forDays: forDays || 0,
                     times: times || 0
-                  });
+                });
 
             if (calculatedQuantity <= 0) {
                 setError("Invalid quantity");
@@ -595,7 +693,12 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                 concentrationID: selectedConcentration.id,
             };
 
-            onAddIssue(newIssue);
+            if (isEditMode && issueToEdit && onUpdateIssue) {
+                onUpdateIssue(newIssue, issueToEdit);
+            } else {
+                onAddIssue(newIssue);
+            }
+
             setOpen(false);
             resetForm();
         } catch (error) {
@@ -607,13 +710,23 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Card
-                    className="border-dashed border-2 p-4 flex justify-center items-center cursor-pointer hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 group">
-                    <div className="flex items-center space-x-2 text-slate-500 group-hover:text-slate-800">
-                        <Plus className="h-5 w-5 transition-transform duration-200 group-hover:scale-110"/>
-                        <span className="font-medium">Issue from Inventory</span>
-                    </div>
-                </Card>
+                {isEditMode ? (
+                    <Button
+                        variant="outline"
+                        className="px-3 text-amber-600 border-amber-300 hover:bg-amber-50"
+                    >
+                        <Pencil className="h-4 w-4 mr-1"/>
+                        Edit
+                    </Button>
+                ) : (
+                    <Card
+                        className="border-dashed border-2 p-4 flex justify-center items-center cursor-pointer hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 group">
+                        <div className="flex items-center space-x-2 text-slate-500 group-hover:text-slate-800">
+                            <Plus className="h-5 w-5 transition-transform duration-200 group-hover:scale-110"/>
+                            <span className="font-medium">Issue from Inventory</span>
+                        </div>
+                    </Card>
+                )}
             </DialogTrigger>
             <DialogContent className="max-w-5xl overflow-y-auto max-h-screen overflow-x-visible">
                 <DialogHeader>
@@ -881,7 +994,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                             (isTopical ? !directQuantity : !dose)
                         }
                     >
-                        Add
+                        {isEditMode ? "Update" : "Add"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
