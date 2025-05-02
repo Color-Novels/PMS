@@ -44,7 +44,7 @@ export interface StrategyDetailsProps {
     strategy: IssuingStrategy;
     details: {
         strategy: string;
-        dose: number;
+        dose: number | null;
         forDays: number | null;
         forTimes: number | null;
         meal: MEAL | null;
@@ -250,7 +250,11 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
             <div className="flex items-center gap-2 text-sm text-slate-600">
                 <StrategyIcon strategy={strategy} className={getStrategyStyles(strategy).iconColor}/>
                 {(() => {
-                    const highlightedDose = <span className="font-bold text-green-700">{details.dose} units</span>;
+                    // For topical medications, dose is null
+                    const isTopical = details.dose === null;
+                    const highlightedDose = isTopical
+                        ? <span className="font-bold text-primary">Topical use </span>
+                        : <span className="font-bold text-primary">{details.dose} units </span>;
 
                     switch (strategy) {
                         case IssuingStrategy.TDS:
@@ -263,25 +267,37 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
                         case IssuingStrategy.NOON:
                             return (
                                 <span>
-                                    {details.strategy} - {highlightedDose} for {details.forDays} days {formatMeal(details.meal)}
+                                    {details.strategy} - {highlightedDose}
+                                    {!isTopical && details.forDays && `for ${details.forDays} days`}
+                                    {formatMeal(details.meal)}
                                 </span>
                             );
                         case IssuingStrategy.SOS:
                             return (
                                 <span>
-                                    {details.strategy} - {highlightedDose} as needed for {details.forTimes} times {formatMeal(details.meal)}
+                                    {details.strategy} - {highlightedDose}
+                                    {!isTopical ? (
+                                        <>as needed for {details.forTimes} times </>
+                                    ) : (
+                                        <>as needed </>
+                                    )}
+                                    {formatMeal(details.meal)}
                                 </span>
                             );
                         case IssuingStrategy.WEEKLY:
                             return (
                                 <span>
-                                    Weekly: {highlightedDose} × {details.forTimes} times {formatMeal(details.meal)}
+                                    Weekly: {highlightedDose}
+                                    {!isTopical && details.forTimes && `× ${details.forTimes} times`}
+                                    {formatMeal(details.meal)}
                                 </span>
                             );
                         case IssuingStrategy.OTHER:
                             return (
                                 <span>
-                                    {details.strategy} - {highlightedDose} × {details.forTimes} days {formatMeal(details.meal)}
+                                    {details.strategy} - {highlightedDose}
+                                    {!isTopical && details.forTimes && `× ${details.forTimes} days`}
+                                    {formatMeal(details.meal)}
                                 </span>
                             );
                         default:
@@ -325,6 +341,7 @@ export function PrescriptionIssuesList({issues, onRemove}: PrescriptionIssuesLis
                                         Type: {issue.drugType.charAt(0).toUpperCase() + issue.drugType.slice(1).toLowerCase()}
                                         • Concentration: {issue.concentration} mg/unit •
                                         Brand: {issue.brandName} • Quantity: {issue.quantity}
+                                        {issue.dose === null && " • Topical application"}
                                     </div>
                                     <StrategyDetails strategy={issue.strategy} details={issue}/>
                                 </div>

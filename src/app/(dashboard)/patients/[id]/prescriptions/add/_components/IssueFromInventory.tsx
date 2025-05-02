@@ -93,6 +93,9 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
     const [forDays, setForDays] = useState<number | null>(null);
     const [mealTiming, setMealTiming] = useState<MEAL | null>(null);
 
+    const [isTopical, setIsTopical] = useState<boolean>(false);
+    const [directQuantity, setDirectQuantity] = useState<number | null>(null);
+
 
     const handleDoseChange = (value: string) => {
         // Check for empty input first
@@ -156,6 +159,8 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
         resetStrategy();
         setError(null);
         setWarning(null);
+        setIsTopical(false);
+        setDirectQuantity(null);
     };
 
     const showWarnings = (item: ConcentrationOption | BrandOption) => {
@@ -339,6 +344,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
 
 
     // Helper function to handle cached brand strategy
+    // Helper function to handle cached brand strategy
     const handleCachedBrandStrategy = async (
         drugBrands: BrandOption[],
         cachedStrategy: CachedStrategy,
@@ -378,9 +384,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
         // Set brand information
         setSelectedBrand(selectedBrand_local);
 
-
         // Set issue details
-
         toast.update(toastID, {
             render: "Applying cached strategy",
             isLoading: true,
@@ -389,16 +393,43 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
         });
 
         setStrategy(issue.strategy);
-        setDose(issue.dose);
         setMealTiming(issue.meal);
         setDetails(issue.details || "");
 
-        // Handle OTHER strategy specific logic
-        if (issue.strategy === IssuingStrategy.OTHER || issue.strategy === IssuingStrategy.SOS) {
-            const {quantity, dose} = issue;
-            setTimes(calculateTimes({strategy: issue.strategy, dose: dose, quantity: quantity}));
+        // Determine if this is a topical medication based on dose
+        const isTopicalMedication = issue.dose === null;
+        setIsTopical(isTopicalMedication);
+
+        if (isTopicalMedication) {
+            // For topical medications, set direct quantity
+            setDirectQuantity(issue.quantity);
+            setDose(null);
+            setForDays(null);
+            setTimes(null);
         } else {
-            setForDays(calculateForDays({strategy: issue.strategy, dose: issue.dose, quantity: issue.quantity}));
+            // For standard medications with dosage
+            setDose(issue.dose);
+            setDirectQuantity(null);
+
+            // Handle OTHER strategy specific logic
+            if (issue.strategy === IssuingStrategy.OTHER || issue.strategy === IssuingStrategy.SOS || issue.strategy === IssuingStrategy.WEEKLY) {
+                const {quantity, dose} = issue;
+                if (dose !== null) {
+                    setTimes(calculateTimes({
+                        strategy: issue.strategy,
+                        dose: dose,
+                        quantity: quantity
+                    }));
+                }
+            } else {
+                if (issue.dose !== null) {
+                    setForDays(calculateForDays({
+                        strategy: issue.strategy,
+                        dose: issue.dose,
+                        quantity: issue.quantity
+                    }));
+                }
+            }
         }
 
         // Show warnings if applicable
@@ -494,37 +525,50 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
 
     const handleAddIssue = () => {
         try {
-            if (!selectedDrug || !selectedConcentration || !selectedBrand || !strategy || !dose || !selectedType) {
+            if (!selectedDrug || !selectedConcentration || !selectedBrand || !strategy || !selectedType) {
                 const missingFields = [
                     !selectedDrug && "Drug",
                     !selectedConcentration && "Concentration",
                     !selectedBrand && "Brand",
                     !strategy && "Strategy",
-                    !dose && "Dose",
                 ].filter(Boolean);
 
                 setError(`Missing fields: ${missingFields.join(", ")}`);
                 return;
             }
 
-            if (strategy === IssuingStrategy.OTHER || strategy === IssuingStrategy.SOS || strategy === IssuingStrategy.WEEKLY) {
-                if (!times) {
-                    setError("Missing fields: Times");
+            if (isTopical) {
+                if (!directQuantity) {
+                    setError("Missing fields: Quantity");
                     return;
                 }
             } else {
-                if (!forDays) {
-                    setError("Missing fields: For Days");
+                if (!dose) {
+                    setError("Missing fields: Dose");
                     return;
+                }
+
+                if (strategy === IssuingStrategy.OTHER || strategy === IssuingStrategy.SOS || strategy === IssuingStrategy.WEEKLY) {
+                    if (!times) {
+                        setError("Missing fields: Times");
+                        return;
+                    }
+                } else {
+                    if (!forDays) {
+                        setError("Missing fields: For Days");
+                        return;
+                    }
                 }
             }
 
-            const calculatedQuantity = calculateQuantity({
-                dose: dose || 0,
-                strategy,
-                forDays: forDays || 0,
-                times: times || 0
-            });
+            const calculatedQuantity = isTopical
+                ? directQuantity || 0
+                : calculateQuantity({
+                    dose: dose || 0,
+                    strategy,
+                    forDays: forDays || 0,
+                    times: times || 0
+                  });
 
             if (calculatedQuantity <= 0) {
                 setError("Invalid quantity");
@@ -536,10 +580,10 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
 
             const newIssue: IssueInForm = {
                 strategy,
-                dose,
+                dose: isTopical ? null : dose,
                 meal: mealTiming,
-                forDays,
-                forTimes: times,
+                forDays: isTopical ? null : forDays,
+                forTimes: isTopical ? null : times,
                 details,
                 brandId: selectedBrand.id,
                 brandName: selectedBrand.name,
@@ -667,62 +711,100 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                         {/* Dosage & Duration Card */}
                         <Card>
                             <CardHeader>
-                                <CardTitle className="flex items-center space-x-2">
-                                    <ClipboardCheck className="h-6 w-6 text-blue-500"/>
-                                    <span>Dosage & Duration</span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex flex-col gap-4 animate-fade-in" key={strategy}>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="dose">Dosage</Label>
-                                        <Input
-                                            id="dose"
-                                            type="number"
-                                            min="0"
-                                            step="0.5"
-                                            value={dose || ""}
-                                            onChange={(e) => handleDoseChange(e.target.value)}
-                                            placeholder="Enter dosage"
+                                <CardTitle className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <ClipboardCheck className="h-6 w-6 text-blue-500"/>
+                                        <span>Dosage & Duration</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Label htmlFor="medicationType" className="text-sm">
+                                            {isTopical ? "Topical" : "Standard"}
+                                        </Label>
+                                        <Switch
+                                            id="medicationType"
+                                            checked={isTopical}
+                                            onCheckedChange={setIsTopical}
                                             disabled={!strategy || cacheFetching}
                                         />
                                     </div>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex flex-col gap-4 animate-fade-in" key={`${strategy}-${isTopical}`}>
+                                    {isTopical ? (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="directQuantity">Quantity</Label>
+                                            <Input
+                                                id="directQuantity"
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value={directQuantity || ""}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (value === "") {
+                                                        setDirectQuantity(null);
+                                                    } else {
+                                                        const numValue = parseFloat(value);
+                                                        if (!isNaN(numValue) && numValue >= 0) {
+                                                            setDirectQuantity(numValue);
+                                                        }
+                                                    }
+                                                }}
+                                                placeholder="Enter quantity"
+                                                disabled={!strategy || cacheFetching}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="dose">Dosage</Label>
+                                                <Input
+                                                    id="dose"
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.5"
+                                                    value={dose || ""}
+                                                    onChange={(e) => handleDoseChange(e.target.value)}
+                                                    placeholder="Enter dosage"
+                                                    disabled={!strategy || cacheFetching}
+                                                />
+                                            </div>
 
-                                    <div
-                                        className="space-y-2"
-                                    >
-                                        {strategy && strategy !== IssuingStrategy.SOS && strategy !== IssuingStrategy.OTHER && strategy !== IssuingStrategy.WEEKLY ? (
-                                            <>
-                                                <Label htmlFor="forDays">For Days</Label>
-                                                <Input
-                                                    id="forDays"
-                                                    type="number"
-                                                    min="0"
-                                                    value={forDays || ""}
-                                                    onChange={(e) => handleForDaysChange(e.target.value)}
-                                                    placeholder="Enter number of days"
-                                                    disabled={!strategy || cacheFetching}
-                                                />
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Label htmlFor="times">For Times</Label>
-                                                <Input
-                                                    id="times"
-                                                    type="number"
-                                                    min="0"
-                                                    value={times || ""}
-                                                    onChange={(e) => handleTimesChange(e.target.value)}
-                                                    placeholder="Enter number of times"
-                                                    disabled={!strategy || cacheFetching}
-                                                />
-                                            </>
-                                        )}
-                                    </div>
+                                            <div className="space-y-2">
+                                                {strategy && strategy !== IssuingStrategy.SOS && strategy !== IssuingStrategy.OTHER && strategy !== IssuingStrategy.WEEKLY ? (
+                                                    <>
+                                                        <Label htmlFor="forDays">For Days</Label>
+                                                        <Input
+                                                            id="forDays"
+                                                            type="number"
+                                                            min="0"
+                                                            value={forDays || ""}
+                                                            onChange={(e) => handleForDaysChange(e.target.value)}
+                                                            placeholder="Enter number of days"
+                                                            disabled={!strategy || cacheFetching}
+                                                        />
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Label htmlFor="times">For Times</Label>
+                                                        <Input
+                                                            id="times"
+                                                            type="number"
+                                                            min="0"
+                                                            value={times || ""}
+                                                            onChange={(e) => handleTimesChange(e.target.value)}
+                                                            placeholder="Enter number of times"
+                                                            disabled={!strategy || cacheFetching}
+                                                        />
+                                                    </>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
-
 
                         {/* Meal Timing Card */}
                         <Card className={'flex flex-col'}>
@@ -791,7 +873,13 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                     </Button>
                     <Button
                         onClick={handleAddIssue}
-                        disabled={!selectedDrug || !selectedConcentration || !selectedBrand || !strategy || !dose}
+                        disabled={
+                            !selectedDrug ||
+                            !selectedConcentration ||
+                            !selectedBrand ||
+                            !strategy ||
+                            (isTopical ? !directQuantity : !dose)
+                        }
                     >
                         Add
                     </Button>

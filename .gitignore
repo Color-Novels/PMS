@@ -44,9 +44,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma
-prisma/migrations
-prisma/seed.ts
 
 patient-management-system/.next
 patient-management-system/node_modules
