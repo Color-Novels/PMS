@@ -42,6 +42,7 @@ const DrugCombobox = ({
                       }: PopoverSelectProps) => {
     const [popoverOpen, setPopoverOpen] = useState(false);
 
+    // Automatically open the popover on mount to draw the user's attention to the selection options.
     useEffect(() => {
         setPopoverOpen(true);
     }, []);
