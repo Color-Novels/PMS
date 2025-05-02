@@ -5,6 +5,16 @@ import {Badge} from "@/components/ui/badge"
 
 const changelog = [
     {
+        version: "1.0.1",
+        date: "2024-06-01",
+        updates: [
+            {type: "Added", description: "Topical medication support with medication type toggle."},
+            {type: "Changed", description: "Dose field now optional for topical medications."},
+            {type: "Improved", description: "Medication cards now clearly distinguish between topical and standard medications."},
+            {type: "Fixed", description: "Button disable logic to work with both topical and standard medication types."},
+        ],
+    },
+    {
         version: "1.0.0",
         date: "2025-03-01",
         updates: [
