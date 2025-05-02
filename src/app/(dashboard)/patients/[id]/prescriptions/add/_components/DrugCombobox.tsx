@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popoverModified";
 import {Button} from "@/components/ui/button";
 import {Check, ChevronsUpDown, Loader2} from "lucide-react";
@@ -41,6 +41,10 @@ const DrugCombobox = ({
                           disabled = false,
                       }: PopoverSelectProps) => {
     const [popoverOpen, setPopoverOpen] = useState(false);
+
+    useEffect(() => {
+        setPopoverOpen(true);
+    }, []);
 
     const handleSelect = (selectedValue: DrugOption) => {
         onChange(selectedValue);
