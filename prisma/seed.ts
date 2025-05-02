@@ -11,7 +11,7 @@ async function createUsers() {
         {
             email: "drdinej@gmail.com",
             mobile: "0765432189",
-            password: "$2a$10$BDKZpkt4kjmDF1M1hfamEehTR5PyOov37UajSVvOZ4vBzrb4W5DMi",
+            password: "$2a$10$B/OCeM1hONRl8UjZJn15GeYQaKOLl8FVIJZABHQpUbu0W9OVXjRbi",
             role: Role.DOCTOR,
             gender: Gender.MALE,
             name: "Dinej Chandrasiri",

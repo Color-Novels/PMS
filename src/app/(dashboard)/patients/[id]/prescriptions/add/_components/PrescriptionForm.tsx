@@ -64,7 +64,7 @@ export interface IssueInForm {
     brandId: number;
     brandName: string;
     meal: MEAL | null;
-    dose: number;
+    dose: number | null;
     forDays: number | null;
     forTimes: number | null;
     strategy: IssuingStrategy;
@@ -271,8 +271,8 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
                         <h1 className="text-2xl font-semibold">Prescribe Medication</h1>
                     </div>
                     <span onClick={formReset} className="text-red-500 cursor-pointer text-sm hover:underline">
-                    X Clear (Refetch recent vitals)
-                </span>
+                        X Clear (Refetch recent vitals)
+                    </span>
                 </div>
                 <Card className="bg-slate-100 p-4 transition-shadow duration-300">
                     <div className="space-y-2.5">
@@ -432,7 +432,8 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
                                         <div className="flex items-center space-x-2 text-sm text-slate-600">
                                             <FileText size={'20'}/>
                                             <span>
-                                                This charge is automatically calculated based on the medicines issued at the bill. This charge is not removable.
+                                                This charge is automatically calculated based on the medicines issued at
+                                                the bill. This charge is not removable.
                                             </span>
                                         </div>
                                     </div>
