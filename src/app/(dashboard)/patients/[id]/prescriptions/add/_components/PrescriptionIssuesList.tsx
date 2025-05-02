@@ -1,11 +1,11 @@
-import React from 'react';
+import React, {MouseEventHandler} from 'react';
 import {Card} from "@/components/ui/card";
 import {
     Clock,
     Calendar,
     AlertCircle,
     Info,
-    X, FileText, Moon, Sun, Sunset, Tally3, Tally4, Tally2, Tally1, ClipboardList, CreditCard, Percent, Tag,
+    X, FileText, Moon, Sun, Sunset, Tally3, Tally4, Tally2, Tally1, ClipboardList, CreditCard, Percent, Tag, Pencil,
 } from "lucide-react";
 import {FaPills, FaCapsules, FaWineBottle, FaEyeDropper, FaAssistiveListeningSystems} from 'react-icons/fa';
 import {MdOutlineHealing} from 'react-icons/md';
@@ -312,9 +312,10 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
 export interface PrescriptionIssuesListProps {
     issues: IssueInForm[];
     onRemove: (index: number) => void;
+    onEdit?: (issue: IssueInForm, event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-export function PrescriptionIssuesList({issues, onRemove}: PrescriptionIssuesListProps) {
+export function PrescriptionIssuesList({issues, onRemove, onEdit}: PrescriptionIssuesListProps) {
     return (
         <div className="space-y-4">
             {issues.map((issue, index) => {
@@ -346,29 +347,43 @@ export function PrescriptionIssuesList({issues, onRemove}: PrescriptionIssuesLis
                                     <StrategyDetails strategy={issue.strategy} details={issue}/>
                                 </div>
                             </div>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="text-slate-500 hover:text-red-600">
-                                        <X className="h-4 w-4"/>
+                            <div className="flex space-x-2">
+                                {onEdit && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-amber-600 border-amber-300 hover:bg-amber-50"
+                                        onClick={(e) => onEdit(issue, e)}
+                                    >
+                                        <Pencil className="h-4 w-4 mr-1"/>
+                                        Edit
                                     </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Remove Medicine {index + 1}?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            Are you sure you want to remove {issue.drugName} ({issue.brandName}) from
-                                            the list? This action cannot be undone.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => onRemove(index)}
-                                                           className={'bg-red-600 text-white hover:bg-red-700'}>
-                                            Remove
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
+                                )}
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="text-slate-500 hover:text-red-600">
+                                            <X className="h-4 w-4"/>
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Remove Medicine {index + 1}?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Are you sure you want to remove {issue.drugName} ({issue.brandName})
+                                                from
+                                                the list? This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => onRemove(index)}
+                                                               className={'bg-red-600 text-white hover:bg-red-700'}>
+                                                Remove
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
                         </div>
                     </Card>
                 );

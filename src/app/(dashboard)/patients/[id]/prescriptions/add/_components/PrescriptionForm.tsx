@@ -112,6 +112,13 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
         return defaultFormData();
     });
     const [feesFetching, setFeesFetching] = useState(false);
+    const [issueToEdit, setIssueToEdit] = useState<IssueInForm | null>(null);
+
+    const handleEditIssue = (issue: IssueInForm,e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        e.preventDefault();
+        setIssueToEdit(issue);
+    };
 
     const router = useRouter();
 
@@ -123,7 +130,14 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
         return charges.map(charge => ({...charge, description: ''}));
     };
 
-    // Load charges on mount
+    const handleUpdateIssue = (updatedIssue: IssueInForm, originalIssue: IssueInForm) => {
+        // Find and replace the issue in your state array
+        setFormData((prevData) => ({
+            ...prevData,
+            issues: prevData.issues.map((issue) => (issue === originalIssue ? updatedIssue : issue))
+        }));
+    };
+
     // Load charges on mount
     useEffect(() => {
         loadFixedCharges().then(fixedCharges => {
@@ -366,8 +380,14 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
                                         issues: prevData.issues.filter((_, i) => i !== index)
                                     }));
                                 }}
+                                onEdit={handleEditIssue}
                             />
-                            <IssueFromInventory onAddIssue={handleAddIssue}/>
+                            <IssueFromInventory
+                                onAddIssue={handleAddIssue}
+                                onUpdateIssue={handleUpdateIssue}
+                                issueToEdit={issueToEdit}
+                                isEditMode={!!issueToEdit}
+                            />
                         </div>
 
                         <div className="space-y-4 pt-6 border-t">

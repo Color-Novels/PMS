@@ -18,7 +18,7 @@ import {IssuingStrategy, MEAL} from "@prisma/client";
 import type {DrugType} from "@prisma/client";
 import type {IssueInForm} from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/PrescriptionForm";
 import {calculateForDays, calculateQuantity, calculateTimes} from "@/app/lib/utils";
-import {CircleAlert, ClipboardCheck, Pencil, Plus, TriangleAlert, Utensils} from "lucide-react";
+import {CircleAlert, ClipboardCheck, Plus, TriangleAlert, Utensils} from "lucide-react";
 import {Textarea} from "@/components/ui/textarea";
 import {differenceInDays} from "date-fns";
 import ConcentrationComboBox from "@/app/(dashboard)/patients/[id]/prescriptions/add/_components/ConcentrationComboBox";
@@ -710,23 +710,13 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                {isEditMode ? (
-                    <Button
-                        variant="outline"
-                        className="px-3 text-amber-600 border-amber-300 hover:bg-amber-50"
-                    >
-                        <Pencil className="h-4 w-4 mr-1"/>
-                        Edit
-                    </Button>
-                ) : (
-                    <Card
-                        className="border-dashed border-2 p-4 flex justify-center items-center cursor-pointer hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 group">
-                        <div className="flex items-center space-x-2 text-slate-500 group-hover:text-slate-800">
-                            <Plus className="h-5 w-5 transition-transform duration-200 group-hover:scale-110"/>
-                            <span className="font-medium">Issue from Inventory</span>
-                        </div>
-                    </Card>
-                )}
+                <Card
+                    className="border-dashed border-2 p-4 flex justify-center items-center cursor-pointer hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 group">
+                    <div className="flex items-center space-x-2 text-slate-500 group-hover:text-slate-800">
+                        <Plus className="h-5 w-5 transition-transform duration-200 group-hover:scale-110"/>
+                        <span className="font-medium">Issue from Inventory</span>
+                    </div>
+                </Card>
             </DialogTrigger>
             <DialogContent className="max-w-5xl overflow-y-auto max-h-screen overflow-x-visible">
                 <DialogHeader>
