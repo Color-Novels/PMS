@@ -267,26 +267,37 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
                         case IssuingStrategy.NOON:
                             return (
                                 <span>
-                                    {details.strategy} - {highlightedDose} - {!isTopical && `for ${details.forDays} days`} {formatMeal(details.meal)}
+                                    {details.strategy} - {highlightedDose}
+                                    {!isTopical && details.forDays && `for ${details.forDays} days`}
+                                    {formatMeal(details.meal)}
                                 </span>
                             );
                         case IssuingStrategy.SOS:
                             return (
                                 <span>
-                                    {details.strategy} - {highlightedDose} as needed
-                                    for {details.forTimes} times {formatMeal(details.meal)}
+                                    {details.strategy} - {highlightedDose}
+                                    {!isTopical ? (
+                                        <>as needed for {details.forTimes} times </>
+                                    ) : (
+                                        <>as needed </>
+                                    )}
+                                    {formatMeal(details.meal)}
                                 </span>
                             );
                         case IssuingStrategy.WEEKLY:
                             return (
                                 <span>
-                                    Weekly: {highlightedDose} × {details.forTimes} times {formatMeal(details.meal)}
+                                    Weekly: {highlightedDose}
+                                    {!isTopical && details.forTimes && `× ${details.forTimes} times`}
+                                    {formatMeal(details.meal)}
                                 </span>
                             );
                         case IssuingStrategy.OTHER:
                             return (
                                 <span>
-                                    {details.strategy} - {highlightedDose} × {details.forTimes} days {formatMeal(details.meal)}
+                                    {details.strategy} - {highlightedDose}
+                                    {!isTopical && details.forTimes && `× ${details.forTimes} days`}
+                                    {formatMeal(details.meal)}
                                 </span>
                             );
                         default:
