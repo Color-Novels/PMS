@@ -873,7 +873,13 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                     </Button>
                     <Button
                         onClick={handleAddIssue}
-                        disabled={!selectedDrug || !selectedConcentration || !selectedBrand || !strategy || !dose}
+                        disabled={
+                            !selectedDrug ||
+                            !selectedConcentration ||
+                            !selectedBrand ||
+                            !strategy ||
+                            (isTopical ? !directQuantity : !dose)
+                        }
                     >
                         Add
                     </Button>
