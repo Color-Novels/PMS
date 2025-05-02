@@ -3,6 +3,8 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Badge} from "@/components/ui/badge"
 
+// More customer-friendly changelog with clear versioning and update types
+
 const changelog = [
     {
         version: "1.0.1",
