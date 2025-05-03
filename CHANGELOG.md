@@ -10,6 +10,7 @@
 - Topical medication support with medication type toggle
 - Conditional rendering for dose field based on medication type
 - Auto-open popover for drug selection on component mount
+- Edit button for a medicine of an adding medicine
 
 ### Changed
 - Modified prescription issue logic to handle null dose values for topical medications
@@ -18,6 +19,9 @@
 ### Fixed
 - Button disabled state logic now accounts for topical vs standard medication types
 - Medication card display for topical medications shows correct information
+
+### Removed
+- Removed handleSubmit from the form of the `PrescriptionForm` component
 
 ---
 

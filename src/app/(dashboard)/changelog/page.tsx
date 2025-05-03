@@ -7,8 +7,8 @@ import {Badge} from "@/components/ui/badge"
 
 const changelog = [
     {
-        version: "1.0.1",
-        date: "2025-05-03",
+        version: "1.1",
+        date: "2025-05-06",
         updates: [
             {type: "Added", description: "Topical medication support with medication type toggle."},
             {type: "Added", description: "Auto-open popover for drug selection for better usability."},
@@ -21,6 +21,10 @@ const changelog = [
                 type: "Fixed",
                 description: "Button disable logic to work with both topical and standard medication types."
             },
+            {
+                type: "Added",
+                description: "Added feature to edit an medicine in the prescription form."
+            }
         ],
     },
     {
