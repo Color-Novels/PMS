@@ -1,4 +1,4 @@
-import React, {MouseEventHandler} from 'react';
+import React from 'react';
 import {Card} from "@/components/ui/card";
 import {
     Clock,
@@ -312,7 +312,7 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
 export interface PrescriptionIssuesListProps {
     issues: IssueInForm[];
     onRemove: (index: number) => void;
-    onEdit?: (issue: IssueInForm, event: React.MouseEvent<HTMLButtonElement>) => void;
+    onEdit?: (issue: IssueInForm | null, event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 export function PrescriptionIssuesList({issues, onRemove, onEdit}: PrescriptionIssuesListProps) {

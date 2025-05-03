@@ -34,6 +34,9 @@ interface IssuesListProps {
     onUpdateIssue?: (issue: IssueInForm, originalIssue: IssueInForm) => void;
     issueToEdit?: IssueInForm | null;
     isEditMode?: boolean;
+    onEdit?: (issue: IssueInForm | null, event: React.MouseEvent<HTMLButtonElement>) => void;
+    isOpen?: boolean;
+    setIsOpen?: (open: boolean) => void;
 }
 
 export type DrugOption = {
@@ -68,9 +71,14 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
                                                            onAddIssue,
                                                            onUpdateIssue,
                                                            issueToEdit = null,
-                                                           isEditMode = false
+                                                           isEditMode = false,
+                                                           onEdit = () => {
+                                                           },
+                                                           isOpen = false,
+                                                           setIsOpen = () => {
+                                                           }
                                                        }) => {
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(isOpen);
     const [isDrugSearching, setIsDrugSearching] = useState(false);
     const [isBrandSearching, setIsBrandSearching] = useState(false);
     const [isConcentrationSearching, setIsConcentrationSearching] = useState(false);
@@ -104,6 +112,15 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
     const [isTopical, setIsTopical] = useState<boolean>(false);
     const [directQuantity, setDirectQuantity] = useState<number | null>(null);
 
+    // Sync component state with props
+    useEffect(() => {
+        setOpen(isOpen);
+    }, [isOpen]);
+
+    // Update parent state when internal state changes
+    useEffect(() => {
+        setIsOpen(open);
+    }, [open, setIsOpen]);
 
     // Function to load existing issue data
     const loadIssueForEditing = async (issue: IssueInForm) => {
@@ -190,6 +207,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
 
     // Effect to load data when editing an existing issue
     useEffect(() => {
+        console.log("Loading issue for editing:", issueToEdit);
         if (issueToEdit && isEditMode && open) {
             loadIssueForEditing(issueToEdit).then();
         }
@@ -734,6 +752,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
                             searchPlaceholder="Search drug"
                             noOptionsMessage="No drugs found"
                             disabled={cacheFetching}
+                            isEditMode={isEditMode}
                         />
                         <div className={'flex gap-4'}>
                             <DrugTypeComboBox
@@ -967,7 +986,9 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
                 <DialogFooter>
                     <Button
                         variant="outline"
-                        onClick={() => {
+                        onClick={(event) => {
+                            // Clear edit mode state
+                            onEdit(null, event)
                             setOpen(false);
                             resetForm();
                         }}

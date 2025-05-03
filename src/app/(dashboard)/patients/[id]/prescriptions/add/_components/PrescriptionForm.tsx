@@ -113,12 +113,7 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
     });
     const [feesFetching, setFeesFetching] = useState(false);
     const [issueToEdit, setIssueToEdit] = useState<IssueInForm | null>(null);
-
-    const handleEditIssue = (issue: IssueInForm,e: React.MouseEvent<HTMLButtonElement>) => {
-        e.stopPropagation();
-        e.preventDefault();
-        setIssueToEdit(issue);
-    };
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const router = useRouter();
 
@@ -232,6 +227,16 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
             charges: [...prevData.charges, charge]
         }));
     }
+
+
+    const handleEditIssue = (issue: IssueInForm | null) => {
+        console.log(issue);
+
+        setIssueToEdit(issue);
+        if (issue) {
+            setIsDialogOpen(true);
+        }
+    };
 
     const handleSubmit = async () => {
         //Check for valid discount
@@ -383,8 +388,11 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
                                 onEdit={handleEditIssue}
                             />
                             <IssueFromInventory
+                                isOpen={isDialogOpen}
+                                setIsOpen={setIsDialogOpen}
                                 onAddIssue={handleAddIssue}
                                 onUpdateIssue={handleUpdateIssue}
+                                onEdit={handleEditIssue}
                                 issueToEdit={issueToEdit}
                                 isEditMode={!!issueToEdit}
                             />
