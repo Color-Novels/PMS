@@ -5,7 +5,7 @@ import {
     Calendar,
     AlertCircle,
     Info,
-    X, FileText, Moon, Sun, Sunset, Tally3, Tally4, Tally2, Tally1, ClipboardList, CreditCard, Percent, Tag,
+    X, FileText, Moon, Sun, Sunset, Tally3, Tally4, Tally2, Tally1, ClipboardList, CreditCard, Percent, Tag, Pencil,
 } from "lucide-react";
 import {FaPills, FaCapsules, FaWineBottle, FaEyeDropper, FaAssistiveListeningSystems} from 'react-icons/fa';
 import {MdOutlineHealing} from 'react-icons/md';
@@ -268,7 +268,7 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
                             return (
                                 <span>
                                     {details.strategy} - {highlightedDose}
-                                    {!isTopical && details.forDays && `for ${details.forDays} days`}
+                                    {!isTopical && details.forDays && `for ${details.forDays} days `}
                                     {formatMeal(details.meal)}
                                 </span>
                             );
@@ -288,7 +288,7 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
                             return (
                                 <span>
                                     Weekly: {highlightedDose}
-                                    {!isTopical && details.forTimes && `× ${details.forTimes} times`}
+                                    {!isTopical && details.forTimes && `× ${details.forTimes} times `}
                                     {formatMeal(details.meal)}
                                 </span>
                             );
@@ -296,7 +296,7 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
                             return (
                                 <span>
                                     {details.strategy} - {highlightedDose}
-                                    {!isTopical && details.forTimes && `× ${details.forTimes} days`}
+                                    {!isTopical && details.forTimes && `× ${details.forTimes} days `}
                                     {formatMeal(details.meal)}
                                 </span>
                             );
@@ -312,9 +312,10 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
 export interface PrescriptionIssuesListProps {
     issues: IssueInForm[];
     onRemove: (index: number) => void;
+    onEdit?: (issue: IssueInForm | null, e?: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-export function PrescriptionIssuesList({issues, onRemove}: PrescriptionIssuesListProps) {
+export function PrescriptionIssuesList({issues, onRemove, onEdit}: PrescriptionIssuesListProps) {
     return (
         <div className="space-y-4">
             {issues.map((issue, index) => {
@@ -346,29 +347,43 @@ export function PrescriptionIssuesList({issues, onRemove}: PrescriptionIssuesLis
                                     <StrategyDetails strategy={issue.strategy} details={issue}/>
                                 </div>
                             </div>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="text-slate-500 hover:text-red-600">
-                                        <X className="h-4 w-4"/>
+                            <div className="flex space-x-2">
+                                {onEdit && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-slate-500 hover:text-blue-600"
+                                        onClick={(event) => onEdit(issue, event)}
+                                    >
+                                        <Pencil className="h-4 w-4 mr-1"/>
                                     </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Remove Medicine {index + 1}?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            Are you sure you want to remove {issue.drugName} ({issue.brandName}) from
-                                            the list? This action cannot be undone.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => onRemove(index)}
-                                                           className={'bg-red-600 text-white hover:bg-red-700'}>
-                                            Remove
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
+                                )}
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon"
+                                                className="text-slate-500 hover:text-red-600">
+                                            <X className="h-4 w-4"/>
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Remove Medicine {index + 1}?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Are you sure you want to remove {issue.drugName} ({issue.brandName})
+                                                from
+                                                the list? This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => onRemove(index)}
+                                                               className={'bg-red-600 text-white hover:bg-red-700'}>
+                                                Remove
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
                         </div>
                     </Card>
                 );

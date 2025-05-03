@@ -26,6 +26,7 @@ interface PopoverSelectProps {
     onSearch?: (searchTerm: string) => void;
     className?: string;
     disabled?: boolean;
+    isEditMode?: boolean;
 }
 
 const DrugCombobox = ({
@@ -39,13 +40,16 @@ const DrugCombobox = ({
                           onSearch,
                           className,
                           disabled = false,
+                          isEditMode = false,
                       }: PopoverSelectProps) => {
     const [popoverOpen, setPopoverOpen] = useState(false);
 
     // Automatically open the popover on mount to draw the user's attention to the selection options.
     useEffect(() => {
-        setPopoverOpen(true);
-    }, []);
+        if (!isEditMode) {
+            setPopoverOpen(true);
+        }
+    }, [isEditMode]);
 
     const handleSelect = (selectedValue: DrugOption) => {
         onChange(selectedValue);

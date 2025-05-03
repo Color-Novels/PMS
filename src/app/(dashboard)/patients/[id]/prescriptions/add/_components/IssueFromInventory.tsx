@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {useDebouncedCallback} from "use-debounce";
@@ -31,6 +31,12 @@ import {Id, toast} from "react-toastify";
 
 interface IssuesListProps {
     onAddIssue: (issue: IssueInForm) => void;
+    onUpdateIssue?: (issue: IssueInForm, originalIssue: IssueInForm) => void;
+    issueToEdit?: IssueInForm | null;
+    isEditMode?: boolean;
+    onEdit?: (issue: IssueInForm | null) => void;
+    isOpen?: boolean;
+    setIsOpen?: (open: boolean) => void;
 }
 
 export type DrugOption = {
@@ -61,7 +67,17 @@ export interface BrandOption {
 
 type CachedStrategy = Awaited<ReturnType<typeof getCachedStrategy>>
 
-const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
+const IssueFromInventory: React.FC<IssuesListProps> = ({
+                                                           onAddIssue,
+                                                           onUpdateIssue,
+                                                           issueToEdit = null,
+                                                           isEditMode = false,
+                                                           onEdit = () => {
+                                                           },
+                                                           isOpen = false,
+                                                           setIsOpen = () => {
+                                                           }
+                                                       }) => {
     const [open, setOpen] = useState(false);
     const [isDrugSearching, setIsDrugSearching] = useState(false);
     const [isBrandSearching, setIsBrandSearching] = useState(false);
@@ -96,6 +112,105 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
     const [isTopical, setIsTopical] = useState<boolean>(false);
     const [directQuantity, setDirectQuantity] = useState<number | null>(null);
 
+    // Sync component state with props
+    useEffect(() => {
+        setOpen(isOpen);
+    }, [isOpen]);
+
+    // Update parent state when internal state changes
+    useEffect(() => {
+        setIsOpen(open);
+    }, [open, setIsOpen]);
+
+    // Function to load existing issue data
+    const loadIssueForEditing = useCallback(async (issue: IssueInForm) => {
+        try {
+            // Create toast to track progress
+            const toastId = toast.loading("Loading issue data...", {
+                position: "bottom-right",
+                pauseOnFocusLoss: false,
+                closeButton: true,
+            });
+
+            setSelectedDrug({id: issue.drugId, name: issue.drugName});
+            setIsTopical(issue.dose === null);
+            setStrategy(issue.strategy);
+            setMealTiming(issue.meal);
+            setDetails(issue.details || "");
+
+            // Set appropriate values based on medication type
+            if (issue.dose === null) {
+                // Topical medication
+                setDirectQuantity(issue.quantity);
+            } else {
+                // Standard medication
+                setDose(issue.dose);
+
+                if (issue.strategy === IssuingStrategy.OTHER ||
+                    issue.strategy === IssuingStrategy.SOS ||
+                    issue.strategy === IssuingStrategy.WEEKLY) {
+                    setTimes(issue.forTimes);
+                } else {
+                    setForDays(issue.forDays);
+                }
+            }
+
+            // Load drug type
+            const types = await getDrugTypesByDrug(issue.drugId);
+            setTypes(types);
+            const matchingType = types.find(t => t.type === issue.drugType) || null;
+            setSelectedType(matchingType);
+
+            // Load concentrations
+            const concentrations = await getConcentrationByDrug({
+                drugID: issue.drugId,
+                type: issue.drugType,
+            });
+            setConcentrations(concentrations);
+            const matchingConcentration = concentrations.find(c => c.id === issue.concentrationID) || null;
+            setSelectedConcentration(matchingConcentration);
+
+            // Load brands
+            if (matchingConcentration) {
+                const brands = await getBrandByDrugConcentrationType({
+                    drugID: issue.drugId,
+                    concentrationID: issue.concentrationID,
+                    type: issue.drugType,
+                });
+                setBrands(brands);
+                const matchingBrand = brands.find(b => b.id === issue.brandId) || null;
+                setSelectedBrand(matchingBrand);
+
+                if (matchingBrand) {
+                    showWarnings(matchingBrand);
+                }
+            }
+
+            toast.update(toastId, {
+                render: "Issue loaded for editing",
+                type: "success",
+                isLoading: false,
+                autoClose: 1500,
+            });
+        } catch (error) {
+            console.error("Error loading issue data:", error);
+            setError("Failed to load issue data for editing");
+            toast.error("Failed to load issue data");
+        } finally {
+            setCacheFetching(false);
+            setIsDrugSearching(false);
+            setIsConcentrationSearching(false);
+            setIsBrandSearching(false);
+            setIsTypeSearching(false);
+        }
+    }, [setIsDrugSearching, setIsConcentrationSearching, setIsBrandSearching, setIsTypeSearching]);
+
+    // Effect to load data when editing an existing issue
+    useEffect(() => {
+        if (issueToEdit && isEditMode && open) {
+            loadIssueForEditing(issueToEdit).then();
+        }
+    }, [issueToEdit, isEditMode, open, loadIssueForEditing]);
 
     const handleDoseChange = (value: string) => {
         // Check for empty input first
@@ -568,7 +683,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                     strategy,
                     forDays: forDays || 0,
                     times: times || 0
-                  });
+                });
 
             if (calculatedQuantity <= 0) {
                 setError("Invalid quantity");
@@ -595,7 +710,12 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                 concentrationID: selectedConcentration.id,
             };
 
-            onAddIssue(newIssue);
+            if (isEditMode && issueToEdit && onUpdateIssue) {
+                onUpdateIssue(newIssue, issueToEdit);
+            } else {
+                onAddIssue(newIssue);
+            }
+
             setOpen(false);
             resetForm();
         } catch (error) {
@@ -604,8 +724,28 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
         }
     };
 
+    // Modify the onOpenChange handler to ensure consistent cleanup
+    const handleOpenChange = (newOpenState: boolean) => {
+        // If dialog is closing (open → false)
+        if (open && !newOpenState) {
+            // Clear edit mode state (just like Cancel button does)
+            if (onEdit) {
+                onEdit(null);
+            }
+            resetForm();
+        }
+
+        // Update local state
+        setOpen(newOpenState);
+
+        // Update parent state if available
+        if (setIsOpen) {
+            setIsOpen(newOpenState);
+        }
+    };
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Card
                     className="border-dashed border-2 p-4 flex justify-center items-center cursor-pointer hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 group">
@@ -631,6 +771,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                             searchPlaceholder="Search drug"
                             noOptionsMessage="No drugs found"
                             disabled={cacheFetching}
+                            isEditMode={isEditMode}
                         />
                         <div className={'flex gap-4'}>
                             <DrugTypeComboBox
@@ -866,7 +1007,6 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                         variant="outline"
                         onClick={() => {
                             setOpen(false);
-                            resetForm();
                         }}
                     >
                         Cancel
@@ -881,7 +1021,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({onAddIssue}) => {
                             (isTopical ? !directQuantity : !dose)
                         }
                     >
-                        Add
+                        {isEditMode ? "Update" : "Add"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

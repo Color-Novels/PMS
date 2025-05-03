@@ -112,6 +112,8 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
         return defaultFormData();
     });
     const [feesFetching, setFeesFetching] = useState(false);
+    const [issueToEdit, setIssueToEdit] = useState<IssueInForm | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const router = useRouter();
 
@@ -123,7 +125,27 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
         return charges.map(charge => ({...charge, description: ''}));
     };
 
-    // Load charges on mount
+    // Add this to ensure issueToEdit gets reset after successful update
+    const handleUpdateIssue = (updatedIssue: IssueInForm, originalIssue: IssueInForm) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            issues: prevData.issues.map((issue) => (issue === originalIssue ? updatedIssue : issue))
+        }));
+
+        // Reset edit state after successful update
+        setIssueToEdit(null);
+        setIsDialogOpen(false);
+    };
+
+    // Add this effect to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            // Clear edit state when component unmounts
+            setIssueToEdit(null);
+            setIsDialogOpen(false);
+        };
+    }, []);
+
     // Load charges on mount
     useEffect(() => {
         loadFixedCharges().then(fixedCharges => {
@@ -219,6 +241,20 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
         }));
     }
 
+
+    const handleEditIssue = (issue: IssueInForm | null, e?: React.MouseEvent<HTMLButtonElement>) => {
+        // Prevent the default button behavior and stop propagation
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        setIssueToEdit(issue);
+        if (issue) {
+            setIsDialogOpen(true);
+        }
+    };
+
     const handleSubmit = async () => {
         //Check for valid discount
         const discountCharges = formData.charges.filter((charge) => charge.type === 'DISCOUNT');
@@ -259,7 +295,7 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
     };
 
     return (
-        <form onSubmit={handleSubmit} className={'w-full'}>
+        <form className={'w-full'}>
             <Card className={'flex flex-col p-4 space-y-4'}>
                 <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
@@ -366,8 +402,17 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
                                         issues: prevData.issues.filter((_, i) => i !== index)
                                     }));
                                 }}
+                                onEdit={handleEditIssue}
                             />
-                            <IssueFromInventory onAddIssue={handleAddIssue}/>
+                            <IssueFromInventory
+                                isOpen={isDialogOpen}
+                                setIsOpen={setIsDialogOpen}
+                                onAddIssue={handleAddIssue}
+                                onUpdateIssue={handleUpdateIssue}
+                                onEdit={handleEditIssue}
+                                issueToEdit={issueToEdit}
+                                isEditMode={!!issueToEdit}
+                            />
                         </div>
 
                         <div className="space-y-4 pt-6 border-t">
