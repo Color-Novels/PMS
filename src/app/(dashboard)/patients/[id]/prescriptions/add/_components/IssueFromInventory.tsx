@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {useDebouncedCallback} from "use-debounce";
@@ -123,7 +123,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
     }, [open, setIsOpen]);
 
     // Function to load existing issue data
-    const loadIssueForEditing = async (issue: IssueInForm) => {
+    const loadIssueForEditing = useCallback(async (issue: IssueInForm) => {
         try {
             // Create toast to track progress
             const toastId = toast.loading("Loading issue data...", {
@@ -203,7 +203,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
             setIsBrandSearching(false);
             setIsTypeSearching(false);
         }
-    };
+    }, [setIsDrugSearching, setIsConcentrationSearching, setIsBrandSearching, setIsTypeSearching]);
 
     // Effect to load data when editing an existing issue
     useEffect(() => {
@@ -211,7 +211,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
         if (issueToEdit && isEditMode && open) {
             loadIssueForEditing(issueToEdit).then();
         }
-    }, [issueToEdit, isEditMode, open]);
+    }, [issueToEdit, isEditMode, open, loadIssueForEditing]);
 
     const handleDoseChange = (value: string) => {
         // Check for empty input first

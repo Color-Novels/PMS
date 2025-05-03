@@ -125,13 +125,26 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
         return charges.map(charge => ({...charge, description: ''}));
     };
 
+    // Add this to ensure issueToEdit gets reset after successful update
     const handleUpdateIssue = (updatedIssue: IssueInForm, originalIssue: IssueInForm) => {
-        // Find and replace the issue in your state array
         setFormData((prevData) => ({
             ...prevData,
             issues: prevData.issues.map((issue) => (issue === originalIssue ? updatedIssue : issue))
         }));
+
+        // Reset edit state after successful update
+        setIssueToEdit(null);
+        setIsDialogOpen(false);
     };
+
+    // Add this effect to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            // Clear edit state when component unmounts
+            setIssueToEdit(null);
+            setIsDialogOpen(false);
+        };
+    }, []);
 
     // Load charges on mount
     useEffect(() => {
