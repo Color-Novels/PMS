@@ -312,7 +312,7 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
 export interface PrescriptionIssuesListProps {
     issues: IssueInForm[];
     onRemove: (index: number) => void;
-    onEdit?: (issue: IssueInForm | null, event: React.MouseEvent<HTMLButtonElement>) => void;
+    onEdit?: (issue: IssueInForm | null) => void;
 }
 
 export function PrescriptionIssuesList({issues, onRemove, onEdit}: PrescriptionIssuesListProps) {
@@ -353,7 +353,7 @@ export function PrescriptionIssuesList({issues, onRemove, onEdit}: PrescriptionI
                                         variant="outline"
                                         size="sm"
                                         className="text-amber-600 border-amber-300 hover:bg-amber-50"
-                                        onClick={(e) => onEdit(issue, e)}
+                                        onClick={() => onEdit(issue)}
                                     >
                                         <Pencil className="h-4 w-4 mr-1"/>
                                         Edit

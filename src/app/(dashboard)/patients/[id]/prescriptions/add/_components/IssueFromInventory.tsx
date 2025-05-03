@@ -34,7 +34,7 @@ interface IssuesListProps {
     onUpdateIssue?: (issue: IssueInForm, originalIssue: IssueInForm) => void;
     issueToEdit?: IssueInForm | null;
     isEditMode?: boolean;
-    onEdit?: (issue: IssueInForm | null, event: React.MouseEvent<HTMLButtonElement>) => void;
+    onEdit?: (issue: IssueInForm | null) => void;
     isOpen?: boolean;
     setIsOpen?: (open: boolean) => void;
 }
@@ -725,8 +725,28 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
         }
     };
 
+    // Modify the onOpenChange handler to ensure consistent cleanup
+    const handleOpenChange = (newOpenState: boolean) => {
+        // If dialog is closing (open → false)
+        if (open && !newOpenState) {
+            // Clear edit mode state (just like Cancel button does)
+            if (onEdit) {
+                onEdit(null);
+            }
+            resetForm();
+        }
+
+        // Update local state
+        setOpen(newOpenState);
+
+        // Update parent state if available
+        if (setIsOpen) {
+            setIsOpen(newOpenState);
+        }
+    };
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Card
                     className="border-dashed border-2 p-4 flex justify-center items-center cursor-pointer hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 group">
@@ -986,11 +1006,8 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
                 <DialogFooter>
                     <Button
                         variant="outline"
-                        onClick={(event) => {
-                            // Clear edit mode state
-                            onEdit(null, event)
+                        onClick={() => {
                             setOpen(false);
-                            resetForm();
                         }}
                     >
                         Cancel
