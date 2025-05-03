@@ -78,7 +78,7 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
                                                            setIsOpen = () => {
                                                            }
                                                        }) => {
-    const [open, setOpen] = useState(isOpen);
+    const [open, setOpen] = useState(false);
     const [isDrugSearching, setIsDrugSearching] = useState(false);
     const [isBrandSearching, setIsBrandSearching] = useState(false);
     const [isConcentrationSearching, setIsConcentrationSearching] = useState(false);
@@ -207,7 +207,6 @@ const IssueFromInventory: React.FC<IssuesListProps> = ({
 
     // Effect to load data when editing an existing issue
     useEffect(() => {
-        console.log("Loading issue for editing:", issueToEdit);
         if (issueToEdit && isEditMode && open) {
             loadIssueForEditing(issueToEdit).then();
         }

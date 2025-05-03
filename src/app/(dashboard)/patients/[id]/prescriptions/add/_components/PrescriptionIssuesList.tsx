@@ -268,7 +268,7 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
                             return (
                                 <span>
                                     {details.strategy} - {highlightedDose}
-                                    {!isTopical && details.forDays && `for ${details.forDays} days`}
+                                    {!isTopical && details.forDays && `for ${details.forDays} days `}
                                     {formatMeal(details.meal)}
                                 </span>
                             );
@@ -288,7 +288,7 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
                             return (
                                 <span>
                                     Weekly: {highlightedDose}
-                                    {!isTopical && details.forTimes && `× ${details.forTimes} times`}
+                                    {!isTopical && details.forTimes && `× ${details.forTimes} times `}
                                     {formatMeal(details.meal)}
                                 </span>
                             );
@@ -296,7 +296,7 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
                             return (
                                 <span>
                                     {details.strategy} - {highlightedDose}
-                                    {!isTopical && details.forTimes && `× ${details.forTimes} days`}
+                                    {!isTopical && details.forTimes && `× ${details.forTimes} days `}
                                     {formatMeal(details.meal)}
                                 </span>
                             );
@@ -312,7 +312,7 @@ export const StrategyDetails: React.FC<StrategyDetailsProps> = ({strategy, detai
 export interface PrescriptionIssuesListProps {
     issues: IssueInForm[];
     onRemove: (index: number) => void;
-    onEdit?: (issue: IssueInForm | null) => void;
+    onEdit?: (issue: IssueInForm | null, e?: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 export function PrescriptionIssuesList({issues, onRemove, onEdit}: PrescriptionIssuesListProps) {
@@ -350,18 +350,18 @@ export function PrescriptionIssuesList({issues, onRemove, onEdit}: PrescriptionI
                             <div className="flex space-x-2">
                                 {onEdit && (
                                     <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-amber-600 border-amber-300 hover:bg-amber-50"
-                                        onClick={() => onEdit(issue)}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-slate-500 hover:text-blue-600"
+                                        onClick={(event) => onEdit(issue, event)}
                                     >
                                         <Pencil className="h-4 w-4 mr-1"/>
-                                        Edit
                                     </Button>
                                 )}
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="text-slate-500 hover:text-red-600">
+                                        <Button variant="ghost" size="icon"
+                                                className="text-slate-500 hover:text-red-600">
                                             <X className="h-4 w-4"/>
                                         </Button>
                                     </AlertDialogTrigger>

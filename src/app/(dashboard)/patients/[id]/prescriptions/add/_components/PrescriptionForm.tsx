@@ -242,8 +242,12 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
     }
 
 
-    const handleEditIssue = (issue: IssueInForm | null) => {
-        console.log(issue);
+    const handleEditIssue = (issue: IssueInForm | null, e?: React.MouseEvent<HTMLButtonElement>) => {
+        // Prevent the default button behavior and stop propagation
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
         setIssueToEdit(issue);
         if (issue) {
@@ -291,7 +295,7 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
     };
 
     return (
-        <form onSubmit={handleSubmit} className={'w-full'}>
+        <form className={'w-full'}>
             <Card className={'flex flex-col p-4 space-y-4'}>
                 <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
