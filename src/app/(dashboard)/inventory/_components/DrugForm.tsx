@@ -549,7 +549,7 @@ export function DrugForm() {
                   required
                   name="packSize"
                   min="0"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                 />
               </div>
               <div>
@@ -567,7 +567,7 @@ export function DrugForm() {
                   required
                   name="quantity"
                   min="1"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                 />
               </div>
               <div>
@@ -586,7 +586,7 @@ export function DrugForm() {
                   required
                   name="wholesalePrice"
                   min="0"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                   autoComplete={"off"}
                 />
               </div>
@@ -606,7 +606,7 @@ export function DrugForm() {
                   required
                   name="retailPrice"
                   min="0"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                   autoComplete={"off"}
                 />
               </div>
@@ -626,7 +626,7 @@ export function DrugForm() {
                   required
                   name="Buffer"
                   min="0"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                 />
               </div>
               <div>

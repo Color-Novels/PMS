@@ -73,6 +73,17 @@
         --sidebar-border: 240 3.7% 15.9%;
         --sidebar-ring: 217.2 91.2% 59.8%;
     }
+        /* Remove number input spinners */
+        .no-spinner::-webkit-inner-spin-button,
+        .no-spinner::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    
+        /* For Firefox */
+        .no-spinner {
+            -moz-appearance: textfield;
+        }
 }
 
 @layer base {
