@@ -1,7 +1,5 @@
 import { Gender, PrismaClient, Role } from "@prisma/client";
 
-import * as process from "process";
-
 const prisma = new PrismaClient();
 
 async function createUsers() {
@@ -35,7 +33,6 @@ async function main() {
 main()
   .catch((e) => {
     console.error("Error during seeding:", e);
-    process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
