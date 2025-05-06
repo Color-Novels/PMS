@@ -80,7 +80,10 @@ export function DrugConfirmationDialog({
           <Alert className="bg-amber-50 border-amber-200">
             <AlertDescription className="text-amber-700">
               Please verify all details below before adding this drug to
-              inventory. <span className="font-semibold text-red-700">This action cannot be undone.</span>
+              inventory.{" "}
+              <span className="font-semibold text-red-700">
+                This action cannot be undone.
+              </span>
             </AlertDescription>
           </Alert>
 
@@ -151,13 +154,13 @@ export function DrugConfirmationDialog({
                 <div>
                   <p className="text-xs text-gray-500">Wholesale Price</p>
                   <p className="font-medium">
-                    Rs {formData.wholesalePrice || "0"}/unit
+                    Rs {formData.wholesalePrice || "0"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Retail Price</p>
                   <p className="font-medium">
-                    Rs {formData.retailPrice || "0"}/unit
+                    Rs {formData.retailPrice || "0"}
                   </p>
                 </div>
               </div>
