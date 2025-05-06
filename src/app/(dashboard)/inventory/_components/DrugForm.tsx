@@ -608,22 +608,22 @@ export function DrugForm() {
                 />
               </div>
               <div>
-              <label
-                htmlFor="expiry"
-                className="block text-sm font-medium mb-1"
-              >
-                Expiry Date
-              </label>
-              <Input
-                id="expiry"
-                type="date"
-                value={formData.expiry}
-                onChange={handleChange}
-                required
-                name="expiry"
-                className={"h-8"}
-              />
-            </div>
+                <label
+                  htmlFor="expiry"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Expiry Date
+                </label>
+                <Input
+                  id="expiry"
+                  type="date"
+                  value={formData.expiry}
+                  onChange={handleChange}
+                  required
+                  name="expiry"
+                  className={"h-8"}
+                />
+              </div>
             </div>
             <Button
               type="submit"
