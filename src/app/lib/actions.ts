@@ -397,7 +397,7 @@ export async function addPatient({
     formData,
 }: {
     formData: PatientFormData;
-}): Promise<myError & { data?: { id: number } }> {
+}): Promise<myError> {
     try {
         const floatHeight = parseFloat(formData.height);
         const floatWeight = parseFloat(formData.weight);
@@ -432,7 +432,7 @@ export async function addPatient({
         return {
             success: true, 
             message: "Patient added successfully",
-            data: { id: newPatient.id }
+            data: newPatient.id
         };
     } catch (e) {
         console.error(e);

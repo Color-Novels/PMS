@@ -173,7 +173,7 @@ export default function AddPatientForm({
         });
 
         if (result.success && result.data) {
-            const newPatientId = result.data.id;
+            const newPatientId = result.data;
 
             // If addToQueue is true and onSuccess is provided, call onSuccess with the new patient ID
             if (addToQueue && onSuccess && newPatientId) {
