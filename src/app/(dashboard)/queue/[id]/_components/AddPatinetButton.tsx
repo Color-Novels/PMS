@@ -13,7 +13,6 @@ import Link from "next/link";
 import CustomSearchSelect, {SearchType} from "@/app/(dashboard)/queue/[id]/_components/CustomSearchSelect";
 import AddPatientForm from "@/app/(dashboard)/patients/_components/AddPatientForm";
 import {addPatientToQueue, getQueueStatus, searchPatients} from "@/app/lib/actions/queue";
-import { UserPlus } from 'lucide-react'; // Import UserPlus icon for our new button
 
 // Search by types
 const AddPatientButton = ({id, refetch}: { id: number; refetch: () => void }) => {

@@ -20,7 +20,6 @@ import { handleServerAction } from "@/app/lib/utils";
 import { addPatient } from "@/app/lib/actions";
 import IconedInput from "@/app/(dashboard)/_components/IconedInput";
 import CustomGenderSelect from "@/app/(dashboard)/patients/_components/CustomGenderSelect";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 type Gender = "" | "MALE" | "FEMALE";
@@ -35,7 +34,6 @@ interface AddPatientFormProps {
 
 export default function AddPatientForm({
     text,
-    queueId,
     addToQueue = false,
     onSuccess,
     closeParentDialog
@@ -166,13 +164,7 @@ export default function AddPatientForm({
         }
     };
 
-    const toggleAgeInput = () => {
-        setUseAge(!useAge);
-        // Reset age when toggling
-        if (!useAge) {
-            setAge("");
-        }
-    };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
