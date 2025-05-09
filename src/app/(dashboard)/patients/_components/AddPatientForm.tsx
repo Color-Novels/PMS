@@ -23,7 +23,21 @@ import CustomGenderSelect from "@/app/(dashboard)/patients/_components/CustomGen
 
 type Gender = "" | "MALE" | "FEMALE";
 
-export default function AddPatientForm({text}: { text?: string }) {
+interface AddPatientFormProps {
+    text?: string;
+    queueId?: number;
+    addToQueue?: boolean;
+    onSuccess?: (patientId: number) => Promise<void>;
+    closeParentDialog?: () => void;
+}
+
+export default function AddPatientForm({
+    text, 
+    queueId, 
+    addToQueue = false, 
+    onSuccess, 
+    closeParentDialog
+}: AddPatientFormProps) {
     const [open, setOpen] = useState(false);
     const [formData, setFormData] = useState<PatientFormData>({
         name: "",
@@ -129,11 +143,21 @@ export default function AddPatientForm({text}: { text?: string }) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const result = await handleServerAction(() => addPatient({formData}), {
-            loadingMessage: "Adding Patient...",
+            loadingMessage: addToQueue ? "Adding Patient and adding to queue..." : "Adding Patient...",
         });
 
-        if (result.success) {
+        if (result.success && result.data) {
+            const newPatientId = result.data.id;
+            
+            // If addToQueue is true and onSuccess is provided, call onSuccess with the new patient ID
+            if (addToQueue && onSuccess && newPatientId) {
+                await onSuccess(newPatientId);
+            }
+            
+            // Close this dialog
             setOpen(false);
+            
+            // Reset form
             setFormData({
                 name: "",
                 NIC: "",
@@ -144,6 +168,12 @@ export default function AddPatientForm({text}: { text?: string }) {
                 weight: "",
                 gender: "",
             });
+            
+            // If closeParentDialog is provided, close the parent dialog
+            if (closeParentDialog) {
+                closeParentDialog();
+            }
+            
             return;
         }
     };
@@ -167,14 +197,15 @@ export default function AddPatientForm({text}: { text?: string }) {
             <DialogTrigger asChild>
                 <Button className="flex items-center space-x-2">
                     <Plus className="w-5 h-5"/>
-                    <span>{text ? text : "Add New Patient"}</span>
+                    <span>{text ? text : addToQueue ? "Add New Patient & Add to Queue" : "Add New Patient"}</span>
                 </Button>
             </DialogTrigger>
 
             <DialogContent className="max-w-4xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center">
-                        <Plus className="w-6 h-6 mr-2 text-green-600"/> Add Patient
+                        <Plus className="w-6 h-6 mr-2 text-green-600"/> 
+                        {addToQueue ? "Add Patient & Add to Queue" : "Add Patient"}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -188,7 +219,7 @@ export default function AddPatientForm({text}: { text?: string }) {
 
                     <div className="grid grid-cols-2 gap-6">
                         <IconedInput icon={<FaPhone/>} name="telephone" value={formData.telephone}
-                                     onChange={handleChange} placeholder="Telephone *" required={true}/>
+                                     onChange={handleChange} placeholder="Telephone" required={false}/>
                         <IconedInput icon={<FaCalendarAlt/>} name="birthDate" type="date" value={formData.birthDate}
                                      onChange={handleChange} required={true}/>
                     </div>
@@ -209,7 +240,7 @@ export default function AddPatientForm({text}: { text?: string }) {
                             Cancel
                         </Button>
                         <Button type="submit">
-                            Add Patient
+                            {addToQueue ? "Add Patient & Add to Queue" : "Add Patient"}
                         </Button>
                     </DialogFooter>
                 </form>
