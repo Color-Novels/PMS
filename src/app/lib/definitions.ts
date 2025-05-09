@@ -39,6 +39,7 @@ export type SidebarItem = SidebarLinkItem | SidebarExpandableItem;
 export type myError = {
     success: boolean;
     message: string;
+    data?: any; // Add this optional property
 };
 
 export type myConfirmation = {
