@@ -8,6 +8,7 @@ on:
 jobs:
   prisma-deploy:
     runs-on: ubuntu-latest
+    environment: Production
     
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
