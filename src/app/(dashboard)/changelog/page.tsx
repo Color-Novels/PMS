@@ -24,6 +24,14 @@ const changelog = [
             {
                 type: "Added",
                 description: "Added feature to edit an medicine in the prescription form."
+            },
+            {
+                type: "Added",
+                description: "Add feature to add new patient and add him to queue."
+            },
+            {
+                type: "Fixed",
+                description: "Fixed preview of add drug form."
             }
         ],
     },
