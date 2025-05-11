@@ -25,12 +25,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Debug step to check environment (secrets will be masked in logs)
-      - name: Debug environment
-        run: |
-          echo "Checking if DATABASE_URL is set (should show masked if present)"
-          if [ -n "$DATABASE_URL" ]; then echo "DATABASE_URL is set"; else echo "DATABASE_URL is NOT set"; fi
-
       # Generate Prisma client before migration
       - name: Generate Prisma Client
         run: npx prisma generate
