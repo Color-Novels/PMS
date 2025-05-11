@@ -56,6 +56,23 @@ export default function AddPatientForm({
     const [queue, setQueue] = useState<Queue | null>(null)
     const [addToQueue, setAddToQueue] = useState(false);
 
+
+    const resetForm = () => {
+        setFormData({
+            name: "",
+            NIC: "",
+            telephone: "",
+            birthDate: "",
+            address: "",
+            height: "",
+            weight: "",
+            gender: "",
+        });
+        setAge("");
+        setUseAge(false);
+        setAddToQueue(false);
+    }
+
     // Update birthDate when age changes
     useEffect(() => {
         if (useAge && age) {
@@ -211,25 +228,17 @@ export default function AddPatientForm({
                 });
                 if (result.success) {
                     setOpen(false);
-                    setFormData({
-                        name: "",
-                        NIC: "",
-                        telephone: "",
-                        birthDate: "",
-                        address: "",
-                        height: "",
-                        weight: "",
-                        gender: "",
-                    });
-                    setAge("");
-                    setUseAge(false);
-                    setAddToQueue(false);
-                    setOpen(false);
+                    resetForm();
                     if (onSuccess) {
                         onSuccess();
                     }
                 }
-                return;
+            } else {
+                setOpen(false);
+                resetForm();
+                if (onSuccess) {
+                    onSuccess();
+                }
             }
         }
     }
