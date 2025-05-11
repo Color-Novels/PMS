@@ -27,7 +27,7 @@ export default function RootLayout({
         <div className={'w-full h-full'}>
             {children}
         </div>
-        <ToastContainer/>
+        <ToastContainer position={'bottom-right'}/>
         </body>
         </html>
     );

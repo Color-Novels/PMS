@@ -32,6 +32,10 @@ const changelog = [
             {
                 type: "Fixed",
                 description: "Fixed preview of add drug form."
+            },
+            {
+                type: "Modified",
+                description: "Added separate add buttons to each fee type."
             }
         ],
     },
