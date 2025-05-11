@@ -228,6 +228,28 @@ export function DrugForm() {
     }
   };
 
+  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+
+    // If only year and month are selected (YYYY-MM format)
+    if (value && value.match(/^\d{4}-\d{2}$/)) {
+      // Auto-append the first day of the month
+      const fullDate = `${value}-01`;
+
+      setFormData((prev) => ({
+        ...prev,
+        expiry: fullDate,
+      }));
+    } else {
+      // Regular date input handling
+      setFormData((prev) => ({
+        ...prev,
+        expiry: value,
+        name: "expiry",
+      }));
+    }
+  };
+
   const handleSupplierSearch = async (query: string) => {
     try {
       const results = await searchSuppliers(query);
@@ -527,7 +549,7 @@ export function DrugForm() {
                   required
                   name="packSize"
                   min="0"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                 />
               </div>
               <div>
@@ -545,7 +567,7 @@ export function DrugForm() {
                   required
                   name="quantity"
                   min="1"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                 />
               </div>
               <div>
@@ -564,7 +586,7 @@ export function DrugForm() {
                   required
                   name="wholesalePrice"
                   min="0"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                   autoComplete={"off"}
                 />
               </div>
@@ -584,7 +606,7 @@ export function DrugForm() {
                   required
                   name="retailPrice"
                   min="0"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                   autoComplete={"off"}
                 />
               </div>
@@ -604,26 +626,27 @@ export function DrugForm() {
                   required
                   name="Buffer"
                   min="0"
-                  className={"h-8"}
+                  className={"h-8 no-spinner"}
                 />
               </div>
               <div>
-              <label
-                htmlFor="expiry"
-                className="block text-sm font-medium mb-1"
-              >
-                Expiry Date
-              </label>
-              <Input
-                id="expiry"
-                type="date"
-                value={formData.expiry}
-                onChange={handleChange}
-                required
-                name="expiry"
-                className={"h-8"}
-              />
-            </div>
+                <label
+                  htmlFor="expiry"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Expiry Date
+                </label>
+                <Input
+                  id="expiry"
+                  // Use month type instead of date type
+                  type="month"
+                  value={formData.expiry ? formData.expiry.substring(0, 7) : ""}
+                  onChange={handleExpiryChange}
+                  required
+                  name="expiry"
+                  className={"h-8"}
+                />
+              </div>
             </div>
             <Button
               type="submit"
