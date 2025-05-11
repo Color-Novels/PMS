@@ -394,25 +394,16 @@ export async function getPatientDetails(id: number) {
 }
 
 export async function addPatient({
-                                     formData,
-                                 }: {
+    formData,
+}: {
     formData: PatientFormData;
 }): Promise<myError> {
     try {
         const floatHeight = parseFloat(formData.height);
-
         const floatWeight = parseFloat(formData.weight);
 
         if (formData.gender === "") {
             return {success: false, message: "Select a valid Gender"};
-        }
-
-        if (!formData.name || !formData.telephone) {
-            return {success: false, message: "Please fill all fields"};
-        }
-
-        if (formData.telephone.length !== 10) {
-            return {success: false, message: "Invalid telephone number"};
         }
 
         const date = new Date(formData.birthDate);
@@ -421,7 +412,8 @@ export async function addPatient({
             return {success: false, message: "Invalid birth date"};
         }
 
-        await prisma.patient.create({
+        // Create the patient and store the result
+        const newPatient = await prisma.patient.create({
             data: {
                 name: formData.name,
                 NIC: formData.NIC,
@@ -435,7 +427,13 @@ export async function addPatient({
         });
 
         revalidatePath("/patients");
-        return {success: true, message: "Patient added successfully"};
+        
+        // Return success along with the new patient ID
+        return {
+            success: true, 
+            message: "Patient added successfully",
+            data: newPatient.id
+        };
     } catch (e) {
         console.error(e);
         return {
