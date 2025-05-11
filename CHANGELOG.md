@@ -12,6 +12,7 @@
 
 - Added add patient and add to queue button
 - Fix issue on add drug preview
+- Added separate buttons to add fees
 
 ## [1.0.1] - 2025-05-03
 

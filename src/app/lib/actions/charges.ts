@@ -27,6 +27,15 @@ export async function updateCharges({
             };
         }
 
+        // Check for negative values
+        const negativeCharges = updatedCharges.filter(charge => charge.value < 0);
+        if (negativeCharges.length > 0) {
+            return {
+                success: false,
+                message: "Charge values cannot be negative",
+            };
+        }
+
         // Use transaction for atomic operation
         const result = await prisma.$transaction(
             updatedCharges.map(charge =>

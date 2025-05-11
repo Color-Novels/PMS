@@ -4,36 +4,128 @@ import React, {useEffect, useState} from "react";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {Charge, ChargeType} from "@prisma/client";
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter} from "@/components/ui/dialog";
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
 import {Label} from "@/components/ui/label";
 import {
     DiscountFeesCard,
     FixedFeesCard, MedicineFeesInfoCard,
     PercentageFeesCard,
-    ProcedureFeesCard
+    ProcedureFeesCard,
 } from "@/app/(dashboard)/admin/fees/_components/FeeCards";
-import FeeTypeSelect from "@/app/(dashboard)/admin/fees/_components/FeeTypeSelect";
-import {Loader2, Plus, Save, SaveOff} from "lucide-react";
+import {Loader2, SaveOff, Save} from "lucide-react";
 import {handleServerAction} from "@/app/lib/utils";
 import {deleteCharge, getCharges, updateCharges} from "@/app/lib/actions/charges";
 import {FeeSystemHelpDialog} from "@/app/(dashboard)/admin/fees/_components/FeeSystemHelpDialog";
+import {toast} from "react-toastify";
 
 export interface FeeInForm extends Charge {
     updated: boolean;
 }
 
-const FeeForm = () => {
-    // Initialize state for each fee
-    const [feeValues, setFeeValues] = useState<FeeInForm[]>([]);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+export interface AddFeeDialogProps {
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    feeType: ChargeType;
+    onAddFee: (fee: { name: string; value: number; type: ChargeType }) => void;
+}
+
+export const AddFeeDialog = ({isOpen, onOpenChange, feeType, onAddFee}: AddFeeDialogProps) => {
     const [newFee, setNewFee] = useState<{ name: string; value: number; type: ChargeType }>({
         name: "",
         value: 0,
-        type: ChargeType.FIXED
+        type: feeType
     });
-    const [unSavedChanges, setUnSavedChanges] = useState(false);
 
+    // Reset form when dialog opens with the correct fee type
+    useEffect(() => {
+        setNewFee({
+            name: "",
+            value: 0,
+            type: feeType
+        });
+    }, [isOpen, feeType]);
+
+    const handleAddNewFee = () => {
+        // Validate fee value is above 0
+        if (newFee.value <= 0) {
+            toast.error("Fee value must be greater than 0");
+            return;
+        }
+
+        // Validate fee name is not empty
+        if (!newFee.name.trim()) {
+            toast.error("Fee name is required");
+            return;
+        }
+
+        onAddFee(newFee);
+        onOpenChange(false);
+    };
+
+    const isPercentage = feeType === ChargeType.PERCENTAGE || feeType === ChargeType.DISCOUNT;
+    const isDiscount = feeType === ChargeType.DISCOUNT;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add
+                        New {feeType.charAt(0) + feeType.slice(1).toLowerCase()} {isDiscount ? '' : "Fee"}</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col gap-4 pt-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">Name</Label>
+                        <Input
+                            id="name"
+                            value={newFee.name}
+                            onChange={(e) => setNewFee({...newFee, name: e.target.value})}
+                            className="col-span-3"
+                        />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="value" className="text-right">Value</Label>
+                        <div className="flex items-center gap-2 col-span-3">
+                            <Input
+                                id="value"
+                                type="number"
+                                value={newFee.value}
+                                onChange={(e) => setNewFee({
+                                    ...newFee,
+                                    value: parseFloat(e.target.value) || 0
+                                })}
+                                className="w-full"
+                            />
+                            <Label htmlFor="value" className="text-right">{isPercentage ? "%" : "LKR"}</Label>
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={handleAddNewFee}>Add Fee</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const FeeForm = () => {
+    // Initialize state for each fee
+    const [feeValues, setFeeValues] = useState<FeeInForm[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [unSavedChanges, setUnSavedChanges] = useState(false);
+    const [dialogState, setDialogState] = useState<{
+        isOpen: boolean;
+        feeType: ChargeType;
+    }>({
+        isOpen: false,
+        feeType: ChargeType.FIXED
+    });
+
+    const openAddFeeDialog = (feeType: ChargeType) => {
+        setDialogState({
+            isOpen: true,
+            feeType
+        });
+    };
 
     const fetchCharges = async () => {
         setIsLoading(true);
@@ -93,11 +185,15 @@ const FeeForm = () => {
     };
 
     // Handle adding a new fee
-    const handleAddNewFee = () => {
+    const handleAddNewFee = (newFee: { name: string; value: number; type: ChargeType }) => {
+        // Check if value is negative
+        if (newFee.value < 0) {
+            toast.error("Fee value cannot be negative");
+            return;
+        }
+
         setUnSavedChanges(true);
         setFeeValues(prev => [...prev, {...newFee, id: -1, updated: true, updatedAt: new Date()}]);
-        setIsDialogOpen(false);
-        setNewFee({name: "", value: 0, type: ChargeType.FIXED});
     };
 
     const handleDeleteFee = async (feeId: number, name: string) => {
@@ -118,48 +214,6 @@ const FeeForm = () => {
                     </div>
                     <div className={'flex gap-4'}>
                         <FeeSystemHelpDialog/>
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button disabled={isLoading}><Plus/>Add New Fee</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Add New Fee</DialogTitle>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="name" className="text-right">Name</Label>
-                                        <Input
-                                            id="name"
-                                            value={newFee.name}
-                                            onChange={(e) => setNewFee({...newFee, name: e.target.value})}
-                                            className="col-span-3"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="value" className="text-right">Value</Label>
-                                        <Input
-                                            id="value"
-                                            type="number"
-                                            value={newFee.value}
-                                            onChange={(e) => setNewFee({
-                                                ...newFee,
-                                                value: parseFloat(e.target.value) || 0
-                                            })}
-                                            className="col-span-3"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="type" className="text-right">Type</Label>
-                                        <FeeTypeSelect value={newFee.type}
-                                                       onChange={(value) => setNewFee({...newFee, type: value})}/>
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button onClick={handleAddNewFee}>Add Fee</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
                     </div>
                 </div>
             </div>
@@ -171,15 +225,37 @@ const FeeForm = () => {
                 </div>
             ) : (
                 <>
+                    <AddFeeDialog
+                        isOpen={dialogState.isOpen}
+                        onOpenChange={(open) => setDialogState(prev => ({...prev, isOpen: open}))}
+                        feeType={dialogState.feeType}
+                        onAddFee={handleAddNewFee}
+                    />
                     <MedicineFeesInfoCard/>
-                    <ProcedureFeesCard feeValues={feeValues} handleInputChange={handleInputChange}
-                                       handleDeleteFee={handleDeleteFee}/>
-                    <FixedFeesCard feeValues={feeValues} handleInputChange={handleInputChange}
-                                   handleDeleteFee={handleDeleteFee}/>
-                    <PercentageFeesCard feeValues={feeValues} handleInputChange={handleInputChange}
-                                        handleDeleteFee={handleDeleteFee}/>
-                    <DiscountFeesCard feeValues={feeValues} handleInputChange={handleInputChange}
-                                      handleDeleteFee={handleDeleteFee}/>
+                    <ProcedureFeesCard
+                        feeValues={feeValues}
+                        handleInputChange={handleInputChange}
+                        handleDeleteFee={handleDeleteFee}
+                        onAddFee={() => openAddFeeDialog(ChargeType.PROCEDURE)}
+                    />
+                    <FixedFeesCard
+                        feeValues={feeValues}
+                        handleInputChange={handleInputChange}
+                        handleDeleteFee={handleDeleteFee}
+                        onAddFee={() => openAddFeeDialog(ChargeType.FIXED)}
+                    />
+                    <PercentageFeesCard
+                        feeValues={feeValues}
+                        handleInputChange={handleInputChange}
+                        handleDeleteFee={handleDeleteFee}
+                        onAddFee={() => openAddFeeDialog(ChargeType.PERCENTAGE)}
+                    />
+                    <DiscountFeesCard
+                        feeValues={feeValues}
+                        handleInputChange={handleInputChange}
+                        handleDeleteFee={handleDeleteFee}
+                        onAddFee={() => openAddFeeDialog(ChargeType.DISCOUNT)}
+                    />
                 </>
             )}
 
