@@ -286,7 +286,7 @@ CREATE TABLE "Issue" (
     "brandId" INTEGER NOT NULL,
     "strategy" "IssuingStrategy" NOT NULL,
     "quantity" DOUBLE PRECISION NOT NULL,
-    "dose" DOUBLE PRECISION,
+    "dose" DOUBLE PRECISION NOT NULL,
     "details" TEXT,
     "meal" "MEAL",
     "type" "DrugType" NOT NULL,
