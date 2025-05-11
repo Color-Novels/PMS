@@ -1,7 +1,17 @@
 import React from 'react';
 import {Card, CardHeader, CardContent} from '@/components/ui/card';
 import {Input} from '@/components/ui/input';
-import {CreditCard, Percent, Tag, LucideIcon, HelpCircle, Trash2, ClipboardList, BriefcaseMedical} from 'lucide-react';
+import {
+    CreditCard,
+    Percent,
+    Tag,
+    LucideIcon,
+    HelpCircle,
+    Trash2,
+    ClipboardList,
+    BriefcaseMedical,
+    Plus
+} from 'lucide-react';
 import {format} from "date-fns";
 import {FeeInForm} from "@/app/(dashboard)/admin/fees/_components/FeeForm";
 import {ChargeType} from "@prisma/client";
@@ -76,11 +86,12 @@ export const feeTypes: Record<ChargeType, {
 const formatDate = (date: Date | null) => date ? format(date, "MMM d, yyyy h:mm a") : "Not available";
 
 // Reusable FeesCard component
-const FeesCard = ({feeValues, handleInputChange, type, handleDeleteFee}: {
+const FeesCard = ({feeValues, handleInputChange, type, handleDeleteFee, onAddFee}: {
     feeValues: FeeInForm[],
     handleInputChange: (feeId: number, value: string) => void,
     type: keyof typeof feeTypes,
     handleDeleteFee: (feeId: number, name: string) => void,
+    onAddFee?: () => void,
 }) => {
     const fees = feeValues.filter(fee => fee.type === type);
     const {icon: Icon, color, suffix, description, precedence, type: typeCS} = feeTypes[type];
@@ -105,6 +116,13 @@ const FeesCard = ({feeValues, handleInputChange, type, handleDeleteFee}: {
                         </TooltipContent>
                     </Tooltip>
                 </div>
+                {onAddFee && (
+                    <Button size="sm" onClick={onAddFee}
+                            className={`bg-${color}-100 text-${color}-800 hover:bg-${color}-200`}>
+                        <Plus size={16} className="mr-1"/>
+                        Add {type.charAt(0) + type.slice(1).toLowerCase()} Fee
+                    </Button>
+                )}
             </CardHeader>
             <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
                 {fees.length > 0 ? (
@@ -211,20 +229,27 @@ export const MedicineFeesInfoCard = () => {
 export const FixedFeesCard = (props: {
     feeValues: FeeInForm[],
     handleInputChange: (feeId: number, value: string) => void,
-    handleDeleteFee: (feeId: number, name: string) => void
+    handleDeleteFee: (feeId: number, name: string) => void,
+    onAddFee: () => void
 }) => <FeesCard {...props} type="FIXED"/>;
+
 export const PercentageFeesCard = (props: {
     feeValues: FeeInForm[],
     handleInputChange: (feeId: number, value: string) => void,
-    handleDeleteFee: (feeId: number, name: string) => void
+    handleDeleteFee: (feeId: number, name: string) => void,
+    onAddFee: () => void
 }) => <FeesCard {...props} type="PERCENTAGE"/>;
+
 export const DiscountFeesCard = (props: {
     feeValues: FeeInForm[],
     handleInputChange: (feeId: number, value: string) => void,
-    handleDeleteFee: (feeId: number, name: string) => void
+    handleDeleteFee: (feeId: number, name: string) => void,
+    onAddFee: () => void
 }) => <FeesCard {...props} type="DISCOUNT"/>;
+
 export const ProcedureFeesCard = (props: {
     feeValues: FeeInForm[],
     handleInputChange: (feeId: number, value: string) => void,
-    handleDeleteFee: (feeId: number, name: string) => void
+    handleDeleteFee: (feeId: number, name: string) => void,
+    onAddFee: () => void
 }) => <FeesCard {...props} type="PROCEDURE"/>;
