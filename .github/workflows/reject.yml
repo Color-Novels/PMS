@@ -1,4 +1,3 @@
-# .github/workflows/reject-non-main-prs.yml
 name: Auto-Close PRs to Disallowed Branches
 
 on:
@@ -10,14 +9,13 @@ jobs:
   close-pr:
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write  # ✅ Allow closing PRs
+      pull-requests: write  # Allow closing PRs
       contents: read        # Required for repo access
 
     steps:
       - name: Close the PR
         run: |
           echo "Rejecting PR to disallowed target branch..."
-          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
           gh pr close "$PR_URL" --comment "❌ Pull requests are only allowed to the 'main' branch."
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
