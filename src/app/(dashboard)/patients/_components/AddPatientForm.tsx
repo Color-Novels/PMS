@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import React, {useState, useEffect} from "react";
+import {Button} from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -10,34 +10,36 @@ import {
     DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import {Checkbox} from "@/components/ui/checkbox";
+import {Plus} from "lucide-react";
 import {
     FaUser, FaIdCard, FaPhone, FaCalendarAlt, FaMapMarkerAlt,
     FaRuler, FaWeight
 } from "react-icons/fa";
-import { PatientFormData } from "@/app/lib/definitions";
-import { handleServerAction } from "@/app/lib/utils";
-import { addPatient } from "@/app/lib/actions";
+import {motion, AnimatePresence} from "framer-motion";
+import {PatientFormData} from "@/app/lib/definitions";
+import {handleServerAction} from "@/app/lib/utils";
+import {addPatient} from "@/app/lib/actions";
 import IconedInput from "@/app/(dashboard)/_components/IconedInput";
 import CustomGenderSelect from "@/app/(dashboard)/patients/_components/CustomGenderSelect";
-import { Label } from "@/components/ui/label";
+import {Label} from "@/components/ui/label";
+import {Queue} from "@prisma/client";
+import {getActiveQueue} from "@/app/lib/actions/queue";
+import {addPatientToQueue} from "@/app/lib/actions/queue";
+import {calcAge} from "@/app/lib/utils";
 
 type Gender = "" | "MALE" | "FEMALE";
 
 interface AddPatientFormProps {
     text?: string;
     queueId?: number;
-    addToQueue?: boolean;
-    onSuccess?: (patientId: number) => Promise<void>;
-    closeParentDialog?: () => void;
+    onSuccess?: () => void;
 }
 
 export default function AddPatientForm({
-    text,
-    addToQueue = false,
-    onSuccess,
-    closeParentDialog
-}: AddPatientFormProps) {
+                                           text,
+                                           onSuccess
+                                       }: AddPatientFormProps) {
     const [open, setOpen] = useState(false);
     const [useAge, setUseAge] = useState(false);
     const [age, setAge] = useState("");
@@ -51,6 +53,25 @@ export default function AddPatientForm({
         weight: "",
         gender: "",
     });
+    const [queue, setQueue] = useState<Queue | null>(null)
+    const [addToQueue, setAddToQueue] = useState(false);
+
+
+    const resetForm = () => {
+        setFormData({
+            name: "",
+            NIC: "",
+            telephone: "",
+            birthDate: "",
+            address: "",
+            height: "",
+            weight: "",
+            gender: "",
+        });
+        setAge("");
+        setUseAge(false);
+        setAddToQueue(false);
+    }
 
     // Update birthDate when age changes
     useEffect(() => {
@@ -66,6 +87,30 @@ export default function AddPatientForm({
         }
     }, [age, useAge]);
 
+    // Update age when birthDate changes
+    useEffect(() => {
+        if (formData.birthDate && !useAge) {
+            try {
+                const dobDate = new Date(formData.birthDate);
+                if (!isNaN(dobDate.getTime())) {
+                    const calculatedAge = calcAge(dobDate).toString();
+                    setAge(calculatedAge);
+                }
+            } catch (e) {
+                console.error("Error calculating age from birthDate:", e);
+            }
+        }
+    }, [formData.birthDate, useAge]);
+
+    // Fetch the active queue when the component mounts
+    useEffect(() => {
+        const fetchQueue = async () => {
+            const activeQueue = await getActiveQueue();
+            setQueue(activeQueue);
+        };
+        fetchQueue().then();
+    }, []);
+
     const parseNIC = (nic: string) => {
         // Return early if NIC is not valid
         if (!nic || nic.length < 10) return null;
@@ -79,7 +124,7 @@ export default function AddPatientForm({
             year = nic.substring(0, 4);
             monthDateCode = parseInt(nic.substring(4, 7));
 
-            // If monthDateCode >= 500, it's female and we need to subtract 500
+            // If monthDateCode >= 500, it's female, and we need to subtract 500
             if (monthDateCode >= 500) {
                 monthDateCode -= 500;
                 gender = "FEMALE";
@@ -93,7 +138,7 @@ export default function AddPatientForm({
             year = "19" + nic.substring(0, 2);
             monthDateCode = parseInt(nic.substring(2, 5));
 
-            // If monthDateCode >= 500, it's female and we need to subtract 500
+            // If monthDateCode >= 500, it's female, and we need to subtract 500
             if (monthDateCode >= 500) {
                 monthDateCode -= 500;
                 gender = "FEMALE";
@@ -135,10 +180,10 @@ export default function AddPatientForm({
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        const {name, value} = e.target;
+        setFormData({...formData, [name]: value});
 
-        // If NIC field is changed, try to extract birth date and gender
+        // If NIC field is changed, try to extract birthdate and gender
         if (name === "NIC") {
             const nicInfo = parseNIC(value);
             if (nicInfo) {
@@ -153,7 +198,7 @@ export default function AddPatientForm({
     };
 
     const handleGenderChange = (value: Gender) => {
-        setFormData({ ...formData, gender: value });
+        setFormData({...formData, gender: value});
     };
 
     const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,47 +209,39 @@ export default function AddPatientForm({
         }
     };
 
-
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const result = await handleServerAction(() => addPatient({ formData }), {
-            loadingMessage: addToQueue ? "Adding Patient and adding to queue..." : "Adding Patient...",
+        const result = await handleServerAction(() => addPatient({formData}), {
+            loadingMessage: "Adding Patient..."
         });
 
         if (result.success && result.data) {
             const newPatientId = result.data;
 
-            // If addToQueue is true and onSuccess is provided, call onSuccess with the new patient ID
-            if (addToQueue && onSuccess && newPatientId) {
-                await onSuccess(newPatientId);
+            // If addToQueue is true, add patient to queue
+            if (addToQueue && queue) {
+                const result = await handleServerAction(() => addPatientToQueue({
+                    queueId: queue.id,
+                    patientId: newPatientId
+                }), {
+                    loadingMessage: "Adding Patient to Queue..."
+                });
+                if (result.success) {
+                    setOpen(false);
+                    resetForm();
+                    if (onSuccess) {
+                        onSuccess();
+                    }
+                }
+            } else {
+                setOpen(false);
+                resetForm();
+                if (onSuccess) {
+                    onSuccess();
+                }
             }
-
-            // Close this dialog
-            setOpen(false);
-
-            // Reset form
-            setFormData({
-                name: "",
-                NIC: "",
-                telephone: "",
-                birthDate: "",
-                address: "",
-                height: "",
-                weight: "",
-                gender: "",
-            });
-            setAge("");
-            setUseAge(false);
-
-            // If closeParentDialog is provided, close the parent dialog
-            if (closeParentDialog) {
-                closeParentDialog();
-            }
-
-            return;
         }
-    };
+    }
 
     const handleCancel = () => {
         setFormData({
@@ -222,112 +259,269 @@ export default function AddPatientForm({
         setOpen(false);
     };
 
+    // Function to toggle between age and birthdate modes
+    const toggleAgeMode = (useAgeMode: boolean) => {
+        setUseAge(useAgeMode);
+
+        if (useAgeMode && formData.birthDate) {
+            // When switching to age mode, ensure age is calculated from birthDate
+            try {
+                const dobDate = new Date(formData.birthDate);
+                if (!isNaN(dobDate.getTime())) {
+                    const calculatedAge = calcAge(dobDate).toString();
+                    setAge(calculatedAge);
+                }
+            } catch (e) {
+                console.error("Error calculating age from birthDate:", e);
+            }
+        } else if (!useAgeMode && age) {
+            // When switching to birthdate mode, ensure birthdate is calculated from age
+            const currentYear = new Date().getFullYear();
+            const birthYear = currentYear - parseInt(age);
+            const calculatedBirthDate = `${birthYear}-01-01`;
+            setFormData(prev => ({
+                ...prev,
+                birthDate: calculatedBirthDate
+            }));
+        }
+    };
+
+    // Animation variants
+    const titleVariants = {
+        initial: {
+            opacity: 0,
+            y: 0,
+        },
+        animate: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.3,
+                ease: "easeOut"
+            }
+        },
+        exit: {
+            opacity: 0,
+            y: 0,
+            transition: {
+                duration: 0.2,
+                ease: "easeIn"
+            }
+        }
+    };
+
+    const buttonVariants = {
+        initial: {scale: 1},
+        hover: {
+            scale: 1.02,
+            transition: {duration: 0.2}
+        },
+        tap: {scale: 0.98}
+    };
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="flex items-center space-x-2">
-                    <Plus className="w-5 h-5" />
-                    <span>{text ? text : addToQueue ? "Add New Patient & Add to Queue" : "Add New Patient"}</span>
-                </Button>
+                <motion.div
+                    variants={buttonVariants}
+                    initial="initial"
+                    whileHover="hover"
+                    whileTap="tap"
+                >
+                    <Button className="flex items-center space-x-2">
+                        <Plus className="w-5 h-5"/>
+                        <span>
+                            {text
+                                ? text
+                                : "Add Patient"}
+                        </span>
+                    </Button>
+                </motion.div>
             </DialogTrigger>
 
             <DialogContent className="max-w-4xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center">
-                        <Plus className="w-6 h-6 mr-2 text-green-600" />
-                        {addToQueue ? "Add Patient & Add to Queue" : "Add Patient"}
+                        <Plus className="w-6 h-6 mr-2 text-green-600"/>
+                        <AnimatePresence mode="wait">
+                            <motion.span
+                                key={addToQueue && queue ? 'queue' : 'normal'}
+                                variants={titleVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                            >
+                                {addToQueue && queue
+                                    ? `Add Patient & Add to Queue #${queue.id}`
+                                    : "Add Patient"}
+                            </motion.span>
+                        </AnimatePresence>
                     </DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-6">
-                        <IconedInput icon={<FaUser />} name="name" value={formData.name} onChange={handleChange}
-                            placeholder="Full Name *" required={true} />
-                        <IconedInput icon={<FaIdCard />} name="NIC" value={formData.NIC} onChange={handleChange}
-                            placeholder="NIC" />
+                        <IconedInput icon={<FaUser/>} name="name" value={formData.name} onChange={handleChange}
+                                     placeholder="Full Name *" required={true}/>
+                        <IconedInput icon={<FaIdCard/>} name="NIC" value={formData.NIC} onChange={handleChange}
+                                     placeholder="NIC"/>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
-
-                        <IconedInput icon={<FaMapMarkerAlt />} name="address" value={formData.address}
-                            onChange={handleChange} placeholder="Address" />
+                        <IconedInput icon={<FaMapMarkerAlt/>} name="address" value={formData.address}
+                                     onChange={handleChange} placeholder="Address"/>
                         <div className="flex flex-col space-y-2">
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Date of Birth</Label>
                                 <div className="flex items-center space-x-1 rounded-md bg-muted p-1">
-                                    <Button
-                                        variant={!useAge ? "default" : "ghost"}
-                                        size="sm"
-                                        type="button" // Add this to prevent form submission
-                                        onClick={() => {
-                                            setUseAge(false);
-                                            setAge(""); // Clear age when switching to birthday
-                                        }}
-                                        className={`px-3 py-1 text-xs ${!useAge ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                                    <motion.div
+                                        whileHover={{scale: 1.02}}
+                                        whileTap={{scale: 0.98}}
                                     >
-                                        <FaCalendarAlt className="mr-1 h-3 w-3" />
-                                        Birthday
-                                    </Button>
-                                    <Button
-                                        variant={useAge ? "default" : "ghost"}
-                                        size="sm"
-                                        type="button" // Add this to prevent form submission
-                                        onClick={() => {
-                                            setUseAge(true);
-                                            setFormData(prev => ({ ...prev, birthDate: "" })); // Clear birthDate when switching to age
-                                        }}
-                                        className={`px-3 py-1 text-xs ${useAge ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                                        <Button
+                                            variant={!useAge ? "default" : "ghost"}
+                                            size="sm"
+                                            type="button"
+                                            onClick={() => toggleAgeMode(false)}
+                                            className={`px-3 py-1 text-xs ${!useAge ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                                        >
+                                            <FaCalendarAlt className="mr-1 h-3 w-3"/>
+                                            Birthday
+                                        </Button>
+                                    </motion.div>
+                                    <motion.div
+                                        whileHover={{scale: 1.02}}
+                                        whileTap={{scale: 0.98}}
                                     >
-                                        <FaUser className="mr-1 h-3 w-3" />
-                                        Age
-                                    </Button>
+                                        <Button
+                                            variant={useAge ? "default" : "ghost"}
+                                            size="sm"
+                                            type="button"
+                                            onClick={() => toggleAgeMode(true)}
+                                            className={`px-3 py-1 text-xs ${useAge ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                                        >
+                                            <FaUser className="mr-1 h-3 w-3"/>
+                                            Age
+                                        </Button>
+                                    </motion.div>
                                 </div>
                             </div>
 
-                            {useAge ? (
-                                <div className="relative">
-                                    <IconedInput
-                                        icon={<FaCalendarAlt />}
-                                        name="age"
-                                        type="number"
-                                        value={age}
-                                        onChange={handleAgeChange}
-                                        placeholder="Enter age in years"
-                                        required={!formData.birthDate} // Only require if birthDate is empty
-                                    />
-                                </div>
-                            ) : (
-                                <IconedInput
-                                    icon={<FaCalendarAlt />}
-                                    name="birthDate"
-                                    type="date"
-                                    value={formData.birthDate}
-                                    onChange={handleChange}
-                                    required={!age /* Only require if age is empty */}
-                                />
-                            )}
+                            <AnimatePresence mode="wait">
+                                {useAge ? (
+                                    <motion.div
+                                        key="age-input"
+                                        initial={{opacity: 0, y: 10}}
+                                        animate={{opacity: 1, y: 0}}
+                                        exit={{opacity: 0, y: -10}}
+                                        transition={{duration: 0.3}}
+                                        className="relative"
+                                    >
+                                        <IconedInput
+                                            icon={<FaCalendarAlt/>}
+                                            name="age"
+                                            type="number"
+                                            value={age}
+                                            onChange={handleAgeChange}
+                                            placeholder="Enter age in years"
+                                            required={!formData.birthDate}
+                                        />
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="date-input"
+                                        initial={{opacity: 0, y: 10}}
+                                        animate={{opacity: 1, y: 0}}
+                                        exit={{opacity: 0, y: -10}}
+                                        transition={{duration: 0.3}}
+                                    >
+                                        <IconedInput
+                                            icon={<FaCalendarAlt/>}
+                                            name="birthDate"
+                                            type="date"
+                                            value={formData.birthDate}
+                                            onChange={handleChange}
+                                            required={!age}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
 
-
-                    <IconedInput icon={<FaPhone />} name="telephone" value={formData.telephone}
-                        onChange={handleChange} placeholder="Telephone" required={false} />
+                    <IconedInput
+                        icon={<FaPhone/>}
+                        name="telephone"
+                        value={formData.telephone}
+                        onChange={handleChange}
+                        placeholder="Telephone"
+                        required={false}
+                    />
 
                     <div className="grid grid-cols-3 gap-6">
-                        <IconedInput icon={<FaRuler />} name="height" type="number" value={formData.height}
-                            onChange={handleChange} placeholder="Height (cm)" />
-                        <IconedInput icon={<FaWeight />} name="weight" type="number" value={formData.weight}
-                            onChange={handleChange} placeholder="Weight (kg)" />
-                        <CustomGenderSelect value={formData.gender} onValueChange={handleGenderChange} />
+                        <IconedInput icon={<FaRuler/>} name="height" type="number" value={formData.height}
+                                     onChange={handleChange} placeholder="Height (cm)"/>
+                        <IconedInput icon={<FaWeight/>} name="weight" type="number" value={formData.weight}
+                                     onChange={handleChange} placeholder="Weight (kg)"/>
+                        <CustomGenderSelect value={formData.gender} onValueChange={handleGenderChange}/>
                     </div>
 
+                    {/* Checkbox for Add to active queue - simplified with larger checkbox */}
+                    {queue && (
+                        <div
+                            className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors duration-200">
+                            <Checkbox
+                                id="add-to-queue"
+                                checked={addToQueue}
+                                onCheckedChange={(checked) => {
+                                    setAddToQueue(checked === true);
+                                }}
+                                className="h-5 w-5" // Made checkbox larger
+                            />
+                            <Label
+                                htmlFor="add-to-queue"
+                                className="text-sm cursor-pointer select-none font-medium"
+                            >
+                                Add to active queue #{queue.id}
+                            </Label>
+                        </div>
+                    )}
+
                     <DialogFooter>
-                        <Button variant="outline" type="button" onClick={handleCancel}>
-                            Cancel
-                        </Button>
-                        <Button type="submit">
-                            {addToQueue ? "Add Patient & Add to Queue" : "Add Patient"}
-                        </Button>
+                        <motion.div
+                            whileHover={{scale: 1.02}}
+                            whileTap={{scale: 0.98}}
+                        >
+                            <Button variant="outline" type="button" onClick={handleCancel}>
+                                Cancel
+                            </Button>
+                        </motion.div>
+
+                        <motion.div
+                            whileHover={{scale: 1.02}}
+                            whileTap={{scale: 0.98}}
+                        >
+                            <AnimatePresence mode="wait">
+                                <Button
+                                    type="submit"
+                                    key={addToQueue && queue ? 'queue-button' : 'add-button'}
+                                    className="relative overflow-hidden"
+                                >
+                                    <motion.span
+                                        key={addToQueue && queue ? 'queue-text' : 'normal-text'}
+                                        variants={titleVariants}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        className="block"
+                                    >
+                                        {addToQueue && queue
+                                            ? `Add Patient & Add to Queue #${queue.id}`
+                                            : "Add Patient"}
+                                    </motion.span>
+                                </Button>
+                            </AnimatePresence>
+                        </motion.div>
                     </DialogFooter>
                 </form>
             </DialogContent>

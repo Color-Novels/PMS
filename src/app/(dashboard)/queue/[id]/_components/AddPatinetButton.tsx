@@ -95,7 +95,7 @@ const AddPatientButton = ({id, refetch}: { id: number; refetch: () => void }) =>
 
     const handleAddToQueue = async (patientId: number) => {
         const result = await handleServerAction(
-            () => addPatientToQueue(id, patientId),
+            () => addPatientToQueue({queueId: id, patientId: patientId}),
             {
                 loadingMessage: 'Adding Patient to Queue...'
             }
@@ -200,15 +200,11 @@ const AddPatientButton = ({id, refetch}: { id: number; refetch: () => void }) =>
                     )}
                     <div className="flex justify-start mt-4 space-x-4">
                         {/* Regular Add Patient button */}
-                        <AddPatientForm/>
-                        
-                        {/* New "Add New Patient & Add to Queue" button */}
-                        <AddPatientForm 
-                            text="Add New Patient & Add to Queue"
-                            queueId={id}
-                            addToQueue={true}
-                            onSuccess={handleAddToQueue}
-                            closeParentDialog={() => setOpen(false)}
+                        <AddPatientForm
+                            onSuccess={() => {
+                                setOpen(false);
+                                refetch();
+                            }}
                         />
                     </div>
                 </DialogContent>
