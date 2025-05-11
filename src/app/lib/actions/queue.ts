@@ -6,6 +6,7 @@ import {revalidatePath} from "next/cache";
 import {SearchType} from "@/app/(dashboard)/queue/[id]/_components/CustomSearchSelect";
 import {verifySession} from "@/app/lib/sessions";
 import {pusher} from "@/app/lib/pusher";
+import {Queue} from "@prisma/client";
 
 
 export async function stopQueue(id: string | null): Promise<myError> {
@@ -205,9 +206,14 @@ export async function searchPatients(query: string, searchBy: SearchType) {
     });
 }
 
-export async function addPatientToQueue(
-    queueId: number,
-    patientId: number
+export async function addPatientToQueue({
+                                            queueId,
+                                            patientId
+                                        }: {
+                                            queueId: number;
+                                            patientId: number;
+
+                                        }
 ): Promise<myError> {
     try {
         const queue = await prisma.queue.findUnique({
@@ -268,7 +274,7 @@ export async function addPatientToQueue(
     }
 }
 
-export async function getActiveQueue() {
+export async function getActiveQueue(): Promise<Queue | null> {
     try {
         return await prisma.queue.findFirst({
             where: {
