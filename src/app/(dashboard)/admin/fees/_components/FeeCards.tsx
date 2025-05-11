@@ -118,7 +118,7 @@ const FeesCard = ({feeValues, handleInputChange, type, handleDeleteFee, onAddFee
                 </div>
                 {onAddFee && (
                     <Button size="sm" onClick={onAddFee}
-                            className={`bg-${color}-100 text-${color}-800 hover:bg-${color}-200`}>
+                            className={`bg-${color}-500 text-${color}-800 hover:bg-${color}-200 text-white`}>
                         <Plus size={16} className="mr-1"/>
                         Add {type.charAt(0) + type.slice(1).toLowerCase()} Fee
                     </Button>
