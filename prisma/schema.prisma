@@ -250,7 +250,7 @@ model Issue {
   brandId             Int
   strategy            IssuingStrategy
   quantity            Float
-  dose                Float
+  dose                Float?
   details             String?
   meal                MEAL?
   type                DrugType

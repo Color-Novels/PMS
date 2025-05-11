@@ -33,6 +33,7 @@ const PrescriptionIssueCard = ({issue}: { issue: IssueWithDetails }) => {
     }
 
     const cardStyles = getStrategyStyles(issue.strategy);
+    const isTopical = issue.dose === null;
 
     return (
         <Card
@@ -50,6 +51,7 @@ const PrescriptionIssueCard = ({issue}: { issue: IssueWithDetails }) => {
                                 text={issue.strategy}
                                 color={cardStyles.badgeColor}
                             />
+                            {isTopical && <CustomBadge text="Topical" color="cyan"/>}
                         </div>
                         <div className="text-sm text-slate-600 flex flex-wrap items-center gap-1">
                             <div>
@@ -80,14 +82,14 @@ const PrescriptionIssueCard = ({issue}: { issue: IssueWithDetails }) => {
                             strategy: issue.strategy,
                             dose: issue.dose,
                             meal: issue.meal,
-                            forDays: calculateForDays({
+                            forDays: isTopical ? null : calculateForDays({
                                 strategy: issue.strategy,
-                                dose: issue.dose,
+                                dose: issue.dose || 0,  // Provide fallback to avoid errors
                                 quantity: issue.quantity
                             }),
-                            forTimes: calculateTimes({
+                            forTimes: isTopical ? null : calculateTimes({
                                 strategy: issue.strategy,
-                                dose: issue.dose,
+                                dose: issue.dose || 0,  // Provide fallback to avoid errors
                                 quantity: issue.quantity
                             }),
                         }}/>

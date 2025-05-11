@@ -198,8 +198,18 @@ const AddPatientButton = ({id, refetch}: { id: number; refetch: () => void }) =>
                             Show More...
                         </Link>
                     )}
-                    <div className="flex justify-start mt-4">
+                    <div className="flex justify-start mt-4 space-x-4">
+                        {/* Regular Add Patient button */}
                         <AddPatientForm/>
+                        
+                        {/* New "Add New Patient & Add to Queue" button */}
+                        <AddPatientForm 
+                            text="Add New Patient & Add to Queue"
+                            queueId={id}
+                            addToQueue={true}
+                            onSuccess={handleAddToQueue}
+                            closeParentDialog={() => setOpen(false)}
+                        />
                     </div>
                 </DialogContent>
             </Dialog>

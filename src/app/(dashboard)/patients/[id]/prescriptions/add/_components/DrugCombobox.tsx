@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popoverModified";
 import {Button} from "@/components/ui/button";
 import {Check, ChevronsUpDown, Loader2} from "lucide-react";
@@ -26,6 +26,7 @@ interface PopoverSelectProps {
     onSearch?: (searchTerm: string) => void;
     className?: string;
     disabled?: boolean;
+    isEditMode?: boolean;
 }
 
 const DrugCombobox = ({
@@ -39,8 +40,16 @@ const DrugCombobox = ({
                           onSearch,
                           className,
                           disabled = false,
+                          isEditMode = false,
                       }: PopoverSelectProps) => {
     const [popoverOpen, setPopoverOpen] = useState(false);
+
+    // Automatically open the popover on mount to draw the user's attention to the selection options.
+    useEffect(() => {
+        if (!isEditMode) {
+            setPopoverOpen(true);
+        }
+    }, [isEditMode]);
 
     const handleSelect = (selectedValue: DrugOption) => {
         onChange(selectedValue);
