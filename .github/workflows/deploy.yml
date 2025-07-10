@@ -15,8 +15,29 @@ jobs:
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       EC2_HOST: ${{ vars.EC2_HOST }}
       EC2_DEPLOY_SSH_KEY: ${{ secrets.EC2_DEPLOY_SSH_KEY }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      EC2_SECURITY_GROUP_ID: ${{ vars.EC2_SECURITY_GROUP_ID }}
 
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get GitHub runner public IP
+        id: ip
+        uses: haythem/public-ip@v1.2
+
+      - name: Authorize SSH from GitHub runner
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id $EC2_SECURITY_GROUP_ID \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.ip.outputs.ipv4 }}/32
+
 #      - name: Checkout code
 #        uses: actions/checkout@v4
 #
@@ -48,10 +69,10 @@ jobs:
             echo "🧹 Stopping old container if exists..."
             docker stop pms-thoduwawa || true
             docker rm pms-thoduwawa || true
-            
+
             echo "🗑️ Removing old image if exists..."
             docker rmi ${{ env.DOCKER_USERNAME }}/pms-thoduwawa:latest || true
-            
+
             echo "🚪 Logging into Docker Hub..."
             echo ${{ env.DOCKER_PASSWORD }} | docker login -u ${{ env.DOCKER_USERNAME }} --password-stdin
 
@@ -65,3 +86,12 @@ jobs:
               -p 3000:3000 \
               --restart unless-stopped \
               ${{ env.DOCKER_USERNAME }}/pms-thoduwawa:latest
+
+      - name: Revoke SSH access for GitHub runner
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id $EC2_SECURITY_GROUP_ID \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.ip.outputs.ipv4 }}/32
