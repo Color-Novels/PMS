@@ -17,6 +17,10 @@ jobs:
       EC2_DEPLOY_SSH_KEY: ${{ secrets.EC2_DEPLOY_SSH_KEY }}
 
     steps:
+      - name: Debug environment variables
+        run: |
+          echo "🧪 Docker username is: $DOCKER_USERNAME"      
+
       - name: Checkout code
         uses: actions/checkout@v4
 
