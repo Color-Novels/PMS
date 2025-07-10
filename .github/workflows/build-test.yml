@@ -11,7 +11,7 @@ jobs:
     environment: Production
 
     env:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_DEPLOY_SSH_KEY: ${{ secrets.EC2_DEPLOY_SSH_KEY }}
