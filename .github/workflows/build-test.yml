@@ -34,7 +34,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.DOCKER_USERNAME }}/pms:latest
+          tags: ${{ env.DOCKER_USERNAME }}/pms-thoduwawa:latest
 
       - name: SSH Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -50,7 +50,7 @@ jobs:
             docker rm pms || true
 
             echo "📦 Pulling latest image..."
-            docker pull ${{ env.DOCKER_USERNAME }}/pms:latest
+            docker pull ${{ env.DOCKER_USERNAME }}/pms-thoduwawa:latest
 
             echo "🚀 Starting container..."
             docker run -d \
