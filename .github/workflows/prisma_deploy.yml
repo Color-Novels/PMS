@@ -1,36 +1,36 @@
-name: Deploy Prisma Migrations
-
-on:
-  push:
-    branches:
-      - production
-
-jobs:
-  prisma-deploy:
-    runs-on: ubuntu-latest
-    environment: Production
-    
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      # Generate Prisma client before migration
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
-      # Run migrations with explicit error handling
-      - name: Run Prisma Migrations
-        run: |
-          echo "Running Prisma migrations..."
-          npx prisma migrate deploy
+#name: Deploy Prisma Migrations
+#
+#on:
+#  push:
+#    branches:
+#      - production
+#
+#jobs:
+#  prisma-deploy:
+#    runs-on: ubuntu-latest
+#    environment: Production
+#
+#    env:
+#      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: '20'
+#
+#      - name: Install dependencies
+#        run: npm ci
+#
+#      # Generate Prisma client before migration
+#      - name: Generate Prisma Client
+#        run: npx prisma generate
+#
+#      # Run migrations with explicit error handling
+#      - name: Run Prisma Migrations
+#        run: |
+#          echo "Running Prisma migrations..."
+#          npx prisma migrate deploy
