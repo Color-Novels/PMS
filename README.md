@@ -10,16 +10,7 @@
 This project uses **Next.js (App Router)** with TypeScript for strongly typed API responses and structured error handling.  
 It also integrates with AWS services (architecture diagram to be added).
 
----
-
-## 🏗 AWS Architecture
-
-> **[ Placeholder: Add AWS Architecture Diagram Here ]**  
-> You can use a PNG, JPG, or SVG file and include it here:
->
-> ```markdown
-> ![AWS Architecture](docs/aws-architecture.png)
-> ```
+![AWS Architecture](docs/aws-architecture.png)
 
 ---
 
@@ -121,3 +112,4 @@ npm run start
 * Add your `.env.local` file with AWS credentials and project secrets.
 
 ---
+
