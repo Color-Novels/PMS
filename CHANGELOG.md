@@ -1,46 +1,114 @@
-[//]: # (More Devoloper friendly changelog)
+# Medipanel with AWS Integration
 
-## [Unrelased]
-
-- UI/UX Changes
-
----
-
-## [1.1] - 2025-05-12
-
-### Added
-
-- Added add patient and add to queue button
-- Fix issue on add drug preview
-- Added separate buttons to add fees
-
-## [1.0.1] - 2025-05-03
-
-### Added
-
-- Topical medication support with medication type toggle
-- Conditional rendering for dose field based on medication type
-- Auto-open popover for drug selection on component mount
-- Edit button for a medicine of an adding medicine
-
-### Changed
-
-- Modified prescription issue logic to handle null dose values for topical medications
-- Updated `handleCachedBrandStrategy` to properly handle topical medications
-
-### Fixed
-
-- Button disabled state logic now accounts for topical vs standard medication types
-- Medication card display for topical medications shows correct information
-
-### Removed
-
-- Removed handleSubmit from the form of the `PrescriptionForm` component
+> A modern web application built with **Next.js** that integrates with AWS services.  
+> Includes typed API responses and dynamic actions based on result types.
 
 ---
 
-## [1.0.0] - 2025-04-26
+## 📜 Project Overview
 
-### Added
+This project uses **Next.js (App Router)** with TypeScript for strongly typed API responses and structured error handling.  
+It also integrates with AWS services 
 
-- Initial release
+![AWS Architecture](docs/aws-architecture.png)
+
+---
+
+## 📂 Project Structure
+
+````
+
+.
+├── app/                  # Next.js App Router pages
+├── components/           # Reusable UI components
+├── lib/                  # Utility functions
+├── types/                # TypeScript type definitions
+├── public/               # Static assets
+└── README.md             # Project documentation
+
+````
+
+---
+
+## 🛠 Tech Stack
+
+- **Frontend**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **AWS**: (e.g., Amplify, RDS, Lambda — fill in specifics)
+- **Version Control**: Git + GitHub
+
+---
+
+## 🧩 Type Definitions
+
+We define two main result types for API responses:
+
+```ts
+export type MyError = {
+    success: boolean;
+    message: string;
+};
+
+export type MyConfirmation = {
+    confirmationRequired: boolean;
+    message: string;
+};
+````
+
+---
+
+## 🔄 Example Usage
+
+```ts
+import { MyError, MyConfirmation } from "@/types";
+
+type APIResult = MyError | MyConfirmation;
+
+function handleResult(result: APIResult) {
+    if ("success" in result) {
+        console.error("Error:", result.message);
+    } else if ("confirmationRequired" in result) {
+        console.log("Confirmation needed:", result.message);
+    }
+}
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1️⃣ Clone the repository
+
+```bash
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
+```
+
+### 2️⃣ Install dependencies
+
+```bash
+npm install
+```
+
+### 3️⃣ Run locally
+
+```bash
+npm run dev
+```
+
+### 4️⃣ Build for production
+
+```bash
+npm run build
+npm run start
+```
+
+---
+
+## 📌 Notes
+
+* Replace the AWS architecture placeholder with your actual diagram.
+* Add your `.env.local` file with AWS credentials and project secrets.
+
+---
