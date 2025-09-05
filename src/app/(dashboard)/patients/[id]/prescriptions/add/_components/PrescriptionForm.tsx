@@ -267,10 +267,10 @@ const PrescriptionForm = ({patientID, vitals}: { patientID: number, vitals: Vita
             return;
         }
 
-        if (formData.issues.length === 0) {
-            toast.error('Please add at least one issue', {position: "bottom-right"});
-            return;
-        }
+        // if (formData.issues.length === 0) {
+        //     toast.error('Please add at least one issue', {position: "bottom-right"});
+        //     return;
+        // }
 
         try {
             const result = await handleServerAction(() => addPrescription({
