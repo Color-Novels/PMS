@@ -7,6 +7,19 @@ import {Badge} from "@/components/ui/badge"
 
 const changelog = [
     {
+        version: "1.2",
+        date: "2025-09-05",
+        updates: [
+            {
+                type: "Added", description: "Added `per pack` notation for add to inventory"
+            },
+            {
+                type: "Removed",
+                description: "Removed validation issue from inventory on prescription"
+            }
+        ]
+    },
+    {
         version: "1.1",
         date: "2025-05-06",
         updates: [
