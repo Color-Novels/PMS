@@ -575,7 +575,7 @@ export function DrugForm() {
                   htmlFor="wholesalePrice"
                   className="block text-sm font-medium mb-1"
                 >
-                  Wholesale Price (Rate)
+                  Wholesale Price (Rate) / Pack
                 </label>
                 <Input
                   id="wholesalePrice"
@@ -595,7 +595,7 @@ export function DrugForm() {
                   htmlFor="retailPrice"
                   className="block text-sm font-medium mb-1"
                 >
-                  Retail Price
+                  Retail Price / Pack
                 </label>
                 <Input
                   id="retailPrice"
