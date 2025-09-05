@@ -415,7 +415,7 @@ export async function addPrescription({
         if (!prescriptionForm.issues.length && !prescriptionForm.offRecordMeds.length) {
             return {
                 success: false,
-                message: "At least one prescription is required please add at least one from off record or from inventory",
+                message: "At least one prescription is required. Please add at least one from off record or from inventory.",
             };
         }
 
